@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://d3js.org/d3.v4.min.js"></script> 
+    <link rel="stylesheet" href="../static/styles.css?v=20260531d">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&family=Nunito:wght@600&display=swap" rel="stylesheet">
+    <title>Theme Editing</title>
+    <style>
+        
+        #main-edit-window {
+            display: flex;
+            flex-direction: column;
+            position: absolute; /* Use absolute positioning */
+            right: 100; /* Align the div to the right of the screen */
+            top: 0; /* Adjust as needed */
+            height: 100vh; /* Optional: makes it full height */
+        }
+    </style>
+</head>
+<body class="container-fluid" style="padding-left: 0; padding-right: 0; margin-left: 0; background: #E5E5E5; 
+font-family: Nunito; font-size: 16px;">
+    <div id="settings-page" style="display: flex; height: 100%; width: 100%;">
+        <div id="editing" class="sections" style="position: absolute; z-index: 2; left: 0px; right: 0px; 
+        top: 0px; bottom: 0px; display: flex; flex-direction: row;">
+            <div id="settingsTabs" style="background: #ffffff; box-shadow: 0px 4px 4px 4px rgba(0, 48, 83, 0.25); 
+            height: 100%; width: 16%; overflow: auto;"></div>
+            <div id="main-edit-window" style="right: 22px; height: 100%; width: 84%; display: flex; flex-direction: column; 
+            align-items: center; overflow: auto;"></div>
+        </div>
+    </div>
+        <script type="module" src="/static/Pages/projectProgressSync.js?v=20260823a" defer></script>
+    <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
+    <script src="https://unpkg.com/tippy.js@6/dist/tippy-bundle.umd.js"></script>
+    <script type="module">
+        import { showSettings } from '../static/Pages/settings-page/menupanel.js?v=20260901a';
+        import { startDemoThemeEditing } from '../static/Pages/settings-page/themes/demoGenerateThemes.js?v=20260901b';
+        import { startThemeEditing } from '../static/Pages/settings-page/themes/startThemeEditing.js?v=20260901b';
+        import { shouldOpenSavedThemeCodeManager, themePayloadHasManualContent } from '../static/Pages/themePersistence.js?v=20260901b';
+        window.APP_MODE = '{{ mode }}';
+        window.CURRENT_PROJECT_ID = '{{ session.get("current_project_id", "") }}';
+        window.USER_WORKSPACE_KEY = '{{ session.get("user_workspace_key", "") }}';
+        try {
+            if (window.USER_WORKSPACE_KEY) localStorage.setItem("currentWorkspaceKey", window.USER_WORKSPACE_KEY);
+            if (window.CURRENT_PROJECT_ID) localStorage.setItem("currentProjectId", window.CURRENT_PROJECT_ID);
+        } catch (error) {
+            console.warn("Could not sync project context:", error);
+        }
+        
+        showSettings();
+        d3.select("#themes-tab").select("div").style("background", "#3A61DD1F").select("img")
+            .attr("src", "/static/images/Enable_Themes.png");
+
+        let lastThemeSignature = "";
+        let themeRefreshTimer = null;
+
+        function getCurrentProjectId() {
+            return window.CURRENT_PROJECT_ID || localStorage.getItem("currentProjectId") || "";
+        }
+
+        function getCurrentWorkspaceKey() {
+            return window.USER_WORKSPACE_KEY || localStorage.getItem("currentWorkspaceKey") || "";
+        }
+
+        function getProjectStorageScope() {
+            const projectId = getCurrentProjectId();
+            if (!projectId) return "";
+            const workspaceKey = getCurrentWorkspaceKey();
+            return workspaceKey ? `${workspaceKey}__${projectId}` : projectId;
+        }
+
+        function getSelectionCompleteKey() {
+            const storageScope = getProjectStorageScope();
+            return storageScope ? `themeSelectionComplete_${storageScope}` : "themeSelectionComplete";
+        }
+
+        function getGeneratedThemesKey() {
+            const storageScope = getProjectStorageScope();
+            return storageScope ? `generatedPossibleThemes_${storageScope}` : "generatedPossibleThemes";
+        }
+
+        function getSelectionPendingKey() {
+            const storageScope = getProjectStorageScope();
+            return storageScope ? `themeSelectionPending_${storageScope}` : "themeSelectionPending";
+        }
+
+        function hasGeneratedThemeCandidates() {
+            try {
+                const rawValue = localStorage.getItem(getGeneratedThemesKey());
+                if (!rawValue) return false;
+                const parsed = JSON.parse(rawValue);
+                return Array.isArray(parsed) && parsed.length > 0;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function persistProgressThemes(progress) {
+            const themes = Array.isArray(progress && progress.themes) ? progress.themes : [];
+            if (themes.length === 0) return;
+            try {
+                localStorage.setItem(getGeneratedThemesKey(), JSON.stringify(themes));
+                if (!getCurrentProjectId() && !getCurrentWorkspaceKey()) {
+                    localStorage.setItem("generatedPossibleThemes", JSON.stringify(themes));
+                }
+            } catch (error) {
+                console.warn("Could not cache generated theme candidates:", error);
+            }
+        }
+
+        function hasThemes(themePayload) {
+            return (
+                themePayload &&
+                Array.isArray(themePayload.themes) &&
+                themePayload.themes.length > 0
+            );
+        }
+
+        function normalizeProgressMessage(message) {
+            return String(message || "").trim().toLowerCase();
+        }
+
+        function isGenerationProgressRunning(progress) {
+            const stage = Number(progress && progress.stage);
+            const message = normalizeProgressMessage(progress && progress.message);
+            return (
+                [0, 1, 2, 3].includes(stage) &&
+                !["idle", "not started", "complete", "demo data ready"].includes(message)
+            );
+        }
+
+        async function fetchGenerationProgress() {
+            if (window.APP_MODE === "demo") return null;
+            try {
+                const projectId = getCurrentProjectId();
+                const projectParam = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+                const response = await fetch(`/progress?t=${Date.now()}${projectParam}`, { cache: "no-store" });
+                if (!response.ok) return null;
+                return await response.json();
+            } catch (error) {
+                console.warn("Could not refresh generation progress:", error);
+                return null;
+            }
+        }
+
+        function setThemeRefreshPolling(active) {
+            if (active && !themeRefreshTimer) {
+                themeRefreshTimer = setInterval(fetchThemes, 5000);
+            } else if (!active && themeRefreshTimer) {
+                clearInterval(themeRefreshTimer);
+                themeRefreshTimer = null;
+            }
+        }
+
+        async function fetchThemes() {
+            try {
+                const projectId = getCurrentProjectId();
+                const projectParam = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+                const themeResponse = await fetch(`/api/themes?t=${Date.now()}${projectParam}`, { cache: "no-store" });
+                if (!themeResponse.ok) return;
+                const themeObject = await themeResponse.json();
+                const progress = await fetchGenerationProgress();
+                const generationRunning = isGenerationProgressRunning(progress);
+                const progressHasThemes = Array.isArray(progress && progress.themes) && progress.themes.length > 0;
+                const generatedCandidatesPending = hasGeneratedThemeCandidates();
+                const selectionPending = localStorage.getItem(getSelectionPendingKey()) === "1" || generatedCandidatesPending;
+                const selectionComplete = localStorage.getItem(getSelectionCompleteKey()) === "1" && !selectionPending;
+                if (selectionPending) {
+                    localStorage.removeItem(getSelectionCompleteKey());
+                }
+
+                let selectedThemeObject = null;
+                try {
+                    const selectedResponse = await fetch(`/api/load_selected_themes?displayOnly=1&includeUnselectedManual=1&includeGeneratedQuotes=1&includeGeneratedThemes=1&t=${Date.now()}${projectParam}`, { cache: "no-store" });
+                    if (selectedResponse.ok) {
+                        selectedThemeObject = await selectedResponse.json();
+                    }
+                } catch (selectedError) {
+                    console.warn("Failed to refresh selected themes:", selectedError);
+                }
+
+                const openSavedCodeManager = shouldOpenSavedThemeCodeManager(
+                    window.APP_MODE,
+                    selectionComplete,
+                    selectedThemeObject
+                );
+                const hasSavedManualContent = themePayloadHasManualContent(selectedThemeObject);
+                const effectiveThemeObject = openSavedCodeManager
+                    ? selectedThemeObject
+                    : themeObject;
+                const signature = JSON.stringify({
+                    themes: effectiveThemeObject || {},
+                    progressStage: progress && progress.stage,
+                    progressMessage: progress && progress.message,
+                    progressThemeCount: progressHasThemes ? progress.themes.length : 0,
+                    generationRunning
+                });
+                if (signature === lastThemeSignature) return;
+                lastThemeSignature = signature;
+
+                if (window.APP_MODE !== "demo" && !selectionComplete && !generationRunning) {
+                    localStorage.removeItem(getSelectionCompleteKey());
+                }
+
+                if (openSavedCodeManager && (window.APP_MODE === "demo" || hasSavedManualContent)) {
+                    localStorage.setItem(getSelectionCompleteKey(), "1");
+                    setThemeRefreshPolling(true);
+                    await startDemoThemeEditing(selectedThemeObject);
+                    return;
+                }
+
+                if (generationRunning) {
+                    setThemeRefreshPolling(true);
+                    await startDemoThemeEditing({ themes: [] });
+                    return;
+                }
+
+                if (openSavedCodeManager) {
+                    localStorage.setItem(getSelectionCompleteKey(), "1");
+                    setThemeRefreshPolling(window.APP_MODE === "demo");
+                    await startDemoThemeEditing(selectedThemeObject);
+                    return;
+                }
+
+                if (hasThemes(effectiveThemeObject) || progressHasThemes) {
+                    persistProgressThemes(progress);
+                    setThemeRefreshPolling(window.APP_MODE === "demo");
+                    await startThemeEditing();
+                    return;
+                }
+
+                // No saved themes yet: keep Code Manager available for manual coding.
+                setThemeRefreshPolling(true);
+                await startDemoThemeEditing({ themes: [] });
+            } catch (error) {
+                console.warn("Failed to refresh themes:", error);
+            }
+        }
+
+        // Initial load
+        fetchThemes();
+        setThemeRefreshPolling(true);
+        window.addEventListener("themes:generation-started", function() {
+            setThemeRefreshPolling(true);
+            fetchThemes();
+        });
+        window.addEventListener("filemap:updated", function() {
+            fetchThemes();
+        });
+        window.addEventListener("storage", function(event) {
+            if (!event || !event.key) return;
+            if (!event.key.includes("FileMap_MatchedData") && !event.key.startsWith("data.json")) return;
+            fetchThemes();
+        });
+    </script>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+</body>
+</html>

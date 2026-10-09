@@ -1,0 +1,349 @@
+#demographics-window {
+    color: #4E4E4E;
+    font-size: 16px;
+    font-family: Inter;
+    font-weight: 700;
+    word-wrap: break-word;
+}
+
+.attr-wrapper {
+    width: 100%;
+    height: auto;
+    margin: 60px auto;
+    padding: 10px;
+    position: relative;
+}
+
+.header1 {
+    margin-top: 40px;
+    margin-bottom: 10px;
+    text-align: center;
+    font-size: 34px;
+}
+
+.header2 {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.table-header {
+    margin-bottom: 4px;
+    text-align: left;
+    font-size: 32px;
+    color: #3366cc;
+    margin-bottom: 48px;
+}
+
+.modal-window {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    gap: 20px;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background: white;
+    border-radius: 10px;
+    border: 2px #4E4E4E solid;
+}
+
+.modal-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    display: flex;
+    gap: 10px;
+}
+
+.modal-backdrop {
+    z-index: -1;
+}
+
+/* .modal-backdrop.in { 
+    z-index: auto;
+} */
+
+input {
+    background: white;
+    border-radius: 10px;
+    border: 2px #4E4E4E solid;
+    justify-content: center;
+    align-items: center;
+    height: 44px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    gap: 10px;
+    color: #4E4E4E;
+    font-size: 16px;
+    font-family: Inter;
+    font-weight: 700;
+    word-wrap: break-word;
+}
+
+input:focus {
+    outline: none;
+}
+
+input:invalid {
+    border: 2px #E14947 solid;
+}
+
+select {
+    background: white;
+    border-radius: 10px;
+    border: 2px #4E4E4E solid;
+    outline: none;
+    justify-content: center;
+    align-items: center;
+    height: 44px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    gap: 10px;
+    color: #4E4E4E;
+    font-size: 16px;
+    font-family: Inter;
+    font-weight: 700;
+    word-wrap: break-word;
+}
+
+/* TODO: indicate that invalid type is chosen */
+select[value="null"],
+select[value="Choose the type"] {
+    border: 2px #E14947 solid;
+}
+
+option {
+    color: #4E4E4E;
+    font-size: 16px;
+    font-family: Inter;
+    font-weight: 700;
+    word-wrap: break-word;
+}
+
+.button {
+    display: flex;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background: white;
+    border-radius: 10px;
+    border: 2px #4E4E4E solid;
+}
+
+.positive {
+    background: #3A61DD;
+    border: 2px #3A61DD solid;
+    color: white;
+}
+
+.next {
+    width: auto;
+}
+
+.bottom-frame {
+    width: 100%;
+    position: relative;
+    display: inline-flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px;
+    gap: 20px;
+}
+
+.choose-button-frame {
+    width: auto;
+    margin: 10px;
+    gap: 20px;
+}
+
+.choose-button-frame-inner {
+    position: relative;
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.choose-button {
+    justify-content: flex-start;
+    align-items: flex-start;
+    display: flex;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background: white;
+    border-radius: 10px;
+    border: 2px #4E4E4E solid;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.choose-button[active] {
+    border: 2px #579AE2 solid;
+    background: #579AE2;
+}
+
+.choose-button-text {
+    text-transform: capitalize;
+}
+
+.choose-button[active] .choose-button-text {
+    color: white;
+}
+
+.add-button[shape=square]{
+    justify-content: flex-start;
+    align-items: flex-start;
+    display: flex;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background: white;
+    border-radius: 10px;
+    border: 2px #4E4E4E solid;
+    gap: 10px;
+}
+
+.add-button[shape=circle]{
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    margin: auto;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background: white;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px #4E4E4E solid;
+    gap: 10px;
+}
+
+.add-symbol {
+    font-weight: 800;
+}
+
+/* table {
+    border: 2px solid #EDEDED;
+    border-radius: 10px;
+} */
+
+.bdr {
+    border-radius: 10px;
+}
+
+.table {
+    border: 2px solid #EDEDED;
+}
+
+th {
+    padding: 5px;
+    
+}
+
+#demographics-grid {
+    width: 100%;
+    min-height: 500px;
+    font-size: 20px;
+}
+
+.ag-select {
+    font-size: 14px;
+    color: #333;
+    background-color: #f4f4f4;
+}
+
+.ag-select-dropdown {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.ag-option {
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.ag-option.selected {
+    background-color: #4caf50;
+    color: white;
+}
+
+.ag-option:hover {
+    background-color: #ddd;
+}
+
+/* AG Grid styling improvements for better user experience */
+.ag-theme-quartz {
+    --ag-row-hover-color: #f0f8ff;
+    --ag-selected-row-background-color: #e3f2fd;
+    --ag-cell-horizontal-border: solid #e0e0e0;
+    --ag-cell-horizontal-border-width: 1px;
+    --ag-font-size: 14px;
+    --ag-font-family: 'Inter', sans-serif;
+}
+
+/* Make cells more clickable and visually appealing */
+.ag-theme-quartz .ag-cell {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.ag-theme-quartz .ag-cell:hover {
+    background-color: #f5f5f5;
+}
+
+/* Style for editable cells */
+.ag-theme-quartz .ag-cell-edit-input {
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 14px;
+}
+
+/* Dropdown styling - keeping it simple */
+.ag-theme-quartz .ag-select {
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    padding: 2px 4px;
+    background-color: white;
+}
+
+/* Header styling */
+.ag-theme-quartz .ag-header-cell {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* Row styling */
+.ag-theme-quartz .ag-row {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.ag-theme-quartz .ag-row:hover {
+    background-color: #f8f9fa;
+}
+
+/* Custom dropdown arrow styling */
+.ag-theme-quartz .ag-cell-dropdown-arrow {
+    color: #000000;
+    font-weight: normal;
+}

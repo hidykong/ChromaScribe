@@ -1,0 +1,193 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    <title>Data Policy – ChromaScribe</title>
+    <style>
+        body {
+            background: #F4F4F4;
+            font-family: Inter, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Top bar */
+        .topbar {
+            background: #F4F4F4;
+            padding: 16px 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #EDEDED;
+        }
+        .topbar a {
+            text-decoration: none;
+            color: #4E4E4E;
+            font-family: Nunito;
+            font-weight: 700;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .topbar a:hover { color: #3A61DD; }
+
+        /* Page content */
+        .page-wrapper {
+            max-width: 860px;
+            margin: 48px auto;
+            padding: 0 24px 80px 24px;
+        }
+
+        .page-title {
+            font-family: Nunito;
+            font-size: 36px;
+            font-weight: 800;
+            color: #111827;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        /* Summary bar */
+        .summary-bar {
+            background: #EEF2FF;
+            border-radius: 12px;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #3A61DD;
+        }
+
+        /* Policy cards */
+        .policy-card {
+            background: #ffffff;
+            border: 1px solid #EDEDED;
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            box-shadow: 0 2px 8px rgba(0,48,83,0.06);
+        }
+        .policy-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #EEF2FF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .policy-card-body { flex: 1; }
+        .policy-card-title {
+            font-family: Nunito;
+            font-size: 16px;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+        .policy-card-text {
+            font-size: 14px;
+            color: #4B5563;
+            line-height: 1.65;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top bar -->
+    <div class="topbar">
+        <a href="/">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+            Back to ChromaScribe
+        </a>
+    </div>
+
+    <div class="page-wrapper">
+
+        <div class="page-title">How this installation handles your data</div>
+
+        <!-- Summary bar -->
+        <div class="summary-bar">
+            <span>Review these details before uploading research materials</span>
+        </div>
+
+        <!-- Card 1 -->
+        <div class="policy-card">
+            <div class="policy-card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3A61DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 3L4 7v5c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V7L12 3z"/>
+                </svg>
+            </div>
+            <div class="policy-card-body">
+                <div class="policy-card-title">Data Collection &amp; Flow</div>
+                <p class="policy-card-text">This open-source edition stores uploaded materials and analysis results in one local workspace. It does not use Firebase or send activity records to a cloud analytics service.</p>
+            </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="policy-card">
+            <div class="policy-card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3A61DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                </svg>
+            </div>
+            <div class="policy-card-body">
+                <div class="policy-card-title">AI processing</div>
+                <p class="policy-card-text">AI suggestions use the model service configured for this installation. This may be a local Ollama service or a hosted provider. When you use a hosted provider, transcript content is sent to that provider for processing. Check your AI settings before uploading research materials.</p>
+            </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="policy-card">
+            <div class="policy-card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3A61DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+                </svg>
+            </div>
+            <div class="policy-card-body">
+                <div class="policy-card-title">Provider data policies</div>
+                <p class="policy-card-text">ChromaScribe does not train models itself. The configured model provider determines its own retention and training policies. Review those terms before processing sensitive data.</p>
+            </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="policy-card">
+            <div class="policy-card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3A61DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+            </div>
+            <div class="policy-card-body">
+                <div class="policy-card-title">Storage &amp; Access</div>
+                <p class="policy-card-text">Project files are saved on the computer running ChromaScribe, outside its public asset directory. They remain there when you close your browser or restart the application. There are no accounts or sign-in: anyone who can reach this installation can access the same workspace. Run it on your own computer and keep it accessible only to people who should have access to your data.</p>
+            </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="policy-card">
+            <div class="policy-card-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3A61DD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/>
+                </svg>
+            </div>
+            <div class="policy-card-body">
+                <div class="policy-card-title">Retention &amp; Deletion</div>
+                <p class="policy-card-text">This application does not automatically delete stored data. You control the workspace folder and any backups on the computer running ChromaScribe. Clearing browser data does not delete project files. Hosted AI providers may retain a separate copy under their own policies.</p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

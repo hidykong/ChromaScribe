@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChromaScribe Local AI Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+
+  :root {
+    --bg: #f5f6f9;
+    --surface: #ffffff;
+    --ink: #1b2233;
+    --muted: #5b6477;
+    --line: #dde1ea;
+    --accent: #3a61dd;
+    --accent-soft: #e7edfd;
+    --example: #6b4fc9;
+    --example-soft: #f1edfc;
+    --code-bg: #111827;
+    --code-ink: #e5e9f2;
+    --warn: #a35f00;
+    --warn-soft: #fdf1dc;
+    --bad: #b3261e;
+    --bad-soft: #fbe6e4;
+    --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10131b; --surface: #171b26; --ink: #e6e9f1; --muted: #9aa3b6; --line: #2a3142;
+      --accent: #7f9cff; --accent-soft: #1f2a4a; --example: #b39dff; --example-soft: #251d40;
+      --code-bg: #0b0e15; --code-ink: #e5e9f2;
+      --warn: #f0b155; --warn-soft: #3a2a10; --bad: #ff8a80; --bad-soft: #3d1a18; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10131b; --surface: #171b26; --ink: #e6e9f1; --muted: #9aa3b6; --line: #2a3142;
+    --accent: #7f9cff; --accent-soft: #1f2a4a; --example: #b39dff; --example-soft: #251d40;
+    --code-bg: #0b0e15; --code-ink: #e5e9f2;
+    --warn: #f0b155; --warn-soft: #3a2a10; --bad: #ff8a80; --bad-soft: #3d1a18; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 var(--font-body); }
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  img { max-width: 100%; }
+
+  .page {
+    max-width: 1120px; margin: 0 auto;
+    padding-inline: 20px; padding-block: 40px 80px;
+    display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 48px;
+  }
+  @media (max-width: 860px) {
+    .page { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-block: 24px 60px; }
+    .toc { position: static !important; }
+  }
+
+  .toc { position: sticky; top: 24px; align-self: start; }
+  .toc h2 {
+    font: 600 12px/1 var(--font-body); text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin: 0 0 12px;
+  }
+  .toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .toc a {
+    display: flex; gap: 10px; align-items: baseline; padding: 6px 8px; border-radius: 6px;
+    color: var(--ink); text-decoration: none; font-size: 15px;
+  }
+  .toc a:hover { background: var(--accent-soft); }
+  .toc .n { font: 600 12px var(--font-mono); color: var(--accent); min-width: 18px; }
+
+  main { min-width: 0; }
+
+  header.intro { margin-bottom: 8px; }
+  .eyebrow {
+    font: 600 12px/1 var(--font-body); text-transform: uppercase; letter-spacing: .1em; color: var(--accent);
+  }
+  h1 {
+    font: 700 clamp(28px, 4.5vw, 40px)/1.12 var(--font-display);
+    margin: 10px 0 14px; text-wrap: balance; letter-spacing: -.01em;
+  }
+  .lede { font-size: 18px; color: var(--muted); max-width: 64ch; margin: 0; }
+
+  .trio { margin-top: 24px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 640px) { .trio { grid-template-columns: minmax(0, 1fr); } }
+  .trio div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; min-width: 0; }
+  .trio code { font: 600 14px var(--font-mono); color: var(--accent); word-break: break-all; }
+  .trio p { margin: 6px 0 0; font-size: 15px; color: var(--muted); }
+
+  section.step { padding-top: 36px; border-top: 1px solid var(--line); margin-top: 36px; }
+  .step-head { display: flex; gap: 14px; align-items: baseline; }
+  .step-num {
+    font: 600 14px var(--font-mono); color: var(--accent);
+    background: var(--accent-soft); border-radius: 6px; padding: 2px 8px; flex: none;
+  }
+  h2.step-title { font: 700 26px/1.2 var(--font-display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.3 var(--font-display); margin: 24px 0 8px; }
+  p, li { max-width: 68ch; }
+  ul, ol.plain { padding-left: 1.2em; }
+  li + li { margin-top: 4px; }
+
+  code.i {
+    font: 14px var(--font-mono); background: var(--accent-soft); color: var(--ink);
+    padding: 1px 6px; border-radius: 4px; word-break: break-word;
+  }
+
+
+  .example {
+    margin: 20px 0; padding: 16px 18px 6px;
+    background: var(--example-soft); border-radius: 12px; min-width: 0;
+  }
+  .example-tag {
+    display: inline-block; font: 600 12px var(--font-body); text-transform: uppercase; letter-spacing: .08em;
+    color: var(--example); margin-bottom: 6px;
+  }
+  .example p, .example li { font-size: 16px; }
+  .example code.i { background: var(--surface); }
+
+  .code { position: relative; margin: 14px 0; background: var(--code-bg); color: var(--code-ink); border-radius: 10px; min-width: 0; }
+  .code .label {
+    font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: #8f9bb3; padding: 10px 16px 0;
+  }
+  .code pre { margin: 0; padding: 10px 16px 16px; overflow-x: auto; font: 14px/1.6 var(--font-mono); }
+  .code .copy {
+    position: absolute; top: 8px; right: 8px; font: 600 12px var(--font-body);
+    background: #25304a; color: #e5e9f2; border: 1px solid #3a4666; border-radius: 6px; padding: 4px 10px; cursor: pointer;
+  }
+  .code .copy:hover { background: #31406a; }
+  .c-com { color: #7f8aa3; }
+  .c-key { color: #9ecbff; }
+  .c-val { color: #b5e8a8; }
+  .c-ok  { color: #6ee7a8; }
+  .ph {
+    color: #ffd27a; background: rgba(255, 196, 87, .16);
+    border-bottom: 1px dashed #ffd27a; border-radius: 3px; padding: 0 2px;
+  }
+  .ph-key {
+    font: 600 13px var(--font-mono); color: #8a5a00; background: #fff0cc;
+    border-bottom: 1px dashed #c98a00; border-radius: 3px; padding: 0 4px;
+  }
+  :root[data-theme="dark"] .ph-key { color: #ffd27a; background: rgba(255, 196, 87, .16); border-color: #ffd27a; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .ph-key { color: #ffd27a; background: rgba(255, 196, 87, .16); border-color: #ffd27a; }
+  }
+
+  .os-switch {
+    display: none; margin: 20px 0 0; padding: 4px; gap: 4px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; width: max-content; max-width: 100%;
+  }
+  .os-js .os-switch { display: inline-flex; }
+  .os-switch button {
+    font: 600 14px var(--font-body); color: var(--muted); background: transparent;
+    border: 0; border-radius: 7px; padding: 6px 14px; cursor: pointer;
+  }
+  .os-switch button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+  .os-switch-label { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+  :root[data-os="win"] [data-only="mac"],
+  :root[data-os="mac"] [data-only="win"] { display: none; }
+  .os-js .os-hint { display: none; }
+
+  figure.shot { margin: 14px 0; }
+  figure.shot .frame { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  figure.shot img { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+  .note { border-radius: 10px; padding: 14px 16px; margin: 18px 0; border: 1px solid var(--line); background: var(--surface); }
+  .note strong:first-child { display: block; margin-bottom: 4px; }
+  .note.warn { background: var(--warn-soft); border-color: transparent; }
+  .note.bad  { background: var(--bad-soft);  border-color: transparent; }
+  .note p { margin: 0; }
+  .note p + p { margin-top: 6px; }
+
+  .table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 15px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  th { font: 600 12px var(--font-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--bg); }
+  tr:last-child td { border-bottom: 0; }
+  td code { font: 13px var(--font-mono); word-break: break-word; }
+  .pill { display: inline-block; font: 600 12px var(--font-mono); padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .pill.bad  { background: var(--bad-soft);  color: var(--bad); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  table.providers { min-width: 860px; }
+  table.providers td:first-child { font-weight: 600; white-space: nowrap; }
+  table.providers td a { word-break: break-word; }
+  .small-note { font-size: 14px; color: var(--muted); margin-top: -4px; }
+
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+<script>
+  (function () {
+    var root = document.documentElement, os = null;
+    root.classList.add("os-js");
+    try { os = localStorage.getItem("chromascribe-os"); } catch (e) {}
+    if (os !== "win" && os !== "mac") {
+      var p = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || "";
+      os = /mac|iphone|ipad|linux|x11/i.test(p) && !/win/i.test(p) ? "mac" : "win";
+    }
+    root.setAttribute("data-os", os);
+  })();
+</script>
+</head>
+<body>
+<div class="page">
+
+  <nav class="toc" aria-label="Setup steps">
+    <h2>Steps</h2>
+    <ol>
+      <li><a href="#provider"><span class="n">1</span>Pick a provider</a></li>
+      <li><a href="#key"><span class="n">2</span>Get an API key</a></li>
+      <li><a href="#model"><span class="n">3</span>Choose a model</a></li>
+      <li><a href="#env"><span class="n">4</span>Create your .env</a></li>
+      <li><a href="#verify"><span class="n">5</span>Restart and verify</a></li>
+      <li><a href="#trouble"><span class="n">?</span>Troubleshooting</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="intro">
+      <div class="eyebrow">ChromaScribe local edition</div>
+      <h1>Set up your AI model</h1>
+      <p class="lede">Use a model on your computer or connect your own hosted AI key. ChromaScribe opens without an account. These settings are only for AI suggestions; Firebase setup is not needed.</p>
+      <div class="trio" aria-label="The three model settings">
+        <div><code>LLM_BASE_URL</code><p>The provider's API address.</p></div>
+        <div><code>LLM_MODEL</code><p>The exact text chat model ID.</p></div>
+        <div><code>LLM_API_KEY</code><p>Your provider's key; empty for local Ollama.</p></div>
+      </div>
+      <div class="os-switch" role="group" aria-label="Show commands for">
+        <button type="button" data-set-os="win">Windows (PowerShell)</button>
+        <button type="button" data-set-os="mac">macOS / Linux (Terminal)</button>
+      </div>
+      <p class="os-switch-label">Switch systems to see the matching commands.</p>
+      <p class="os-hint small-note">Commands are labeled for Windows PowerShell or the macOS / Linux Terminal.</p>
+    </header>
+
+    <section class="step" id="provider">
+      <div class="step-head"><span class="step-num">1</span><h2 class="step-title">Pick a provider</h2></div>
+      <p>The template uses local Ollama. Install and start <a href="https://ollama.com/download">Ollama</a>, then download a model:</p>
+      <div class="code">
+        <div class="label">Terminal or PowerShell</div>
+        <button class="copy" type="button">Copy</button>
+<pre>ollama pull qwen3:latest</pre>
+      </div>
+      <p>Keep Ollama running while using AI features. A downloaded local model runs on your computer, and its speed depends on your hardware. See <a href="https://docs.ollama.com/api/openai-compatibility">Ollama's compatibility documentation</a>.</p>
+      <p>For hosted AI, use a provider's OpenAI-compatible chat API. These are two options:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Provider</th><th>API base URL</th><th>Instructions</th></tr></thead>
+          <tbody>
+            <tr><td>Google AI Studio</td><td><code>https://generativelanguage.googleapis.com/v1beta/openai</code></td><td><a href="https://ai.google.dev/gemini-api/docs/openai">Provider documentation</a></td></tr>
+            <tr><td>Groq</td><td><code>https://api.groq.com/openai/v1</code></td><td><a href="https://console.groq.com/docs/openai">Provider documentation</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note warn">
+        <strong>Using interview data with hosted AI</strong>
+        <p>Hosted AI requests send transcript content to the provider. Review its data policy, costs, and your study's requirements before using participant data. Start with a small sample to check the model's output.</p>
+      </div>
+    </section>
+
+    <section class="step" id="key">
+      <div class="step-head"><span class="step-num">2</span><h2 class="step-title">Get an API key</h2></div>
+      <p>Skip this step for a downloaded local Ollama model. For hosted AI:</p>
+      <ol class="plain">
+        <li>Sign in to your provider's console. Open <a href="https://aistudio.google.com/apikey">Google AI Studio's API keys page</a> or <a href="https://console.groq.com/keys">Groq's API keys page</a>.</li>
+        <li>Create a key for your own account and copy it when the provider displays it.</li>
+        <li>Save it in your local <code class="i">.env</code> file in step 4.</li>
+      </ol>
+      <p>A key works only with its provider and the models your account can access. Keep it out of screenshots, messages, and Git commits.</p>
+    </section>
+
+    <section class="step" id="model">
+      <div class="step-head"><span class="step-num">3</span><h2 class="step-title">Choose a model</h2></div>
+      <p>Choose a text chat model. Copy its exact ID from the provider's current model list. Speech, image, and embedding models do not perform the tagging and code-generation tasks.</p>
+      <p>For Ollama, <code class="i">ollama list</code> shows downloaded models. The template uses <code class="i">qwen3:latest</code>.</p>
+      <p>If your hosted provider supports listing models through its API, replace both placeholders below. Use <code class="i">curl</code> on macOS / Linux and <code class="i">curl.exe</code> in Windows PowerShell:</p>
+      <div class="code" data-only="win">
+        <div class="label">Windows · PowerShell</div>
+        <button class="copy" type="button">Copy</button>
+<pre>curl.exe "YOUR_BASE_URL/models" -H "Authorization: Bearer YOUR_KEY"</pre>
+      </div>
+      <div class="code" data-only="mac">
+        <div class="label">macOS / Linux · Terminal</div>
+        <button class="copy" type="button">Copy</button>
+<pre>curl "YOUR_BASE_URL/models" -H "Authorization: Bearer YOUR_KEY"</pre>
+      </div>
+      <p>Some providers do not expose this endpoint; use their console or documentation instead. A successful model list confirms access, but you still need to try generation with the selected model.</p>
+    </section>
+
+    <section class="step" id="env">
+      <div class="step-head"><span class="step-num">4</span><h2 class="step-title">Create your <code class="i">.env</code> file</h2></div>
+      <p>From the project folder, copy the template once. If <code class="i">.env</code> already exists, edit it instead of overwriting it.</p>
+      <div class="code" data-only="win">
+        <div class="label">Windows · PowerShell</div>
+        <button class="copy" type="button">Copy</button>
+<pre>Copy-Item .env.template .env</pre>
+      </div>
+      <div class="code" data-only="mac">
+        <div class="label">macOS / Linux · Terminal</div>
+        <button class="copy" type="button">Copy</button>
+<pre>cp .env.template .env</pre>
+      </div>
+      <p data-only="mac">On macOS, Finder hides dotfiles. Press <b>Cmd+Shift+.</b> to show them, or use <code class="i">open -e .env</code> to edit the file.</p>
+      <h3>Local Ollama</h3>
+      <p>Keep the template's three AI settings:</p>
+      <div class="code">
+        <div class="label">.env</div>
+        <button class="copy" type="button">Copy</button>
+<pre>LLM_BASE_URL=http://localhost:11434/v1
+LLM_MODEL=qwen3:latest
+LLM_API_KEY=</pre>
+      </div>
+      <h3>Your own hosted key</h3>
+      <p>Replace those same three lines with your provider settings. For example, Google AI Studio:</p>
+      <div class="code">
+        <div class="label">.env</div>
+        <button class="copy" type="button">Copy</button>
+<pre>LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+LLM_MODEL=your_available_gemini_model_id
+LLM_API_KEY=your_own_api_key</pre>
+      </div>
+      <ul>
+        <li>Replace the model and key placeholders. Keep only one active value for each variable.</li>
+        <li>Use the API base URL without <code class="i">/models</code> or <code class="i">/chat/completions</code> at the end.</li>
+        <li>Keep <code class="i">.env</code> private. Git ignores it; only the credential-free template is tracked.</li>
+        <li>No Firebase settings or account credentials are used in this edition.</li>
+      </ul>
+    </section>
+
+    <section class="step" id="verify">
+      <div class="step-head"><span class="step-num">5</span><h2 class="step-title">Restart and verify</h2></div>
+      <p>With your Python environment active, start ChromaScribe:</p>
+      <div class="code">
+        <div class="label">Terminal or PowerShell</div>
+        <button class="copy" type="button">Copy</button>
+<pre>python app.py</pre>
+      </div>
+      <p>Open <a href="http://127.0.0.1:5001">http://127.0.0.1:5001</a>. The project page opens directly. Create a small test project, upload transcripts and questions, and run the AI processing. Review its tags and codes.</p>
+      <p>Watch the terminal for the configured provider, model, and any errors. Source checks do not verify your live AI key. A demo or saved project may already contain results, so it is not enough to confirm the provider connection.</p>
+      <p>If the app is already running, stop it with <b>Ctrl+C</b> and start it again after editing <code class="i">.env</code>. Saved project files remain on disk.</p>
+    </section>
+
+    <section class="step" id="trouble">
+      <div class="step-head"><span class="step-num">?</span><h2 class="step-title">Troubleshooting</h2></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Problem</th><th>What to check</th></tr></thead>
+          <tbody>
+            <tr><td>Connection refused by Ollama</td><td>Start Ollama and confirm the base URL is <code>http://localhost:11434/v1</code>. The application and Ollama are separate processes.</td></tr>
+            <tr><td>401 or 403 from hosted AI</td><td>Check that the key belongs to this provider and has access. Create a replacement if the key was revoked or exposed.</td></tr>
+            <tr><td>Model not found</td><td>Choose an exact model ID available to your account. For Ollama, download the model with <code>ollama pull</code>.</td></tr>
+            <tr><td>429 or quota error</td><td>Check your provider's usage limits. Retry when the limit clears or use another available model.</td></tr>
+            <tr><td>Empty or unreadable output</td><td>Try a smaller sample and another text chat model. API compatibility does not guarantee useful tags or correctly formatted codes.</td></tr>
+            <tr><td>Settings do not change</td><td>Restart the app. Environment variables already set in your terminal override values in <code>.env</code>.</td></tr>
+            <tr><td>Sign-in page appears</td><td>Start this local edition's checkout and check whether a different server is using the same port.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>When reporting a problem, include the provider, model ID, and error text. Remove keys, participant names, and transcript content from anything you share.</p>
+    </section>
+
+    <footer>ChromaScribe · Local edition AI setup · October 2026. Check your provider's current model list and terms before choosing a model.</footer>
+  </main>
+</div>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var buttons = document.querySelectorAll("[data-set-os]");
+    function sync() {
+      var os = root.getAttribute("data-os");
+      buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-set-os") === os)); });
+    }
+    buttons.forEach(function (b) {
+      b.addEventListener("click", function () {
+        var os = b.getAttribute("data-set-os");
+        root.setAttribute("data-os", os);
+        try { localStorage.setItem("chromascribe-os", os); } catch (e) {}
+        sync();
+      });
+    });
+    sync();
+  })();
+
+  // Copy buttons: copy the <pre> text next to the button.
+  document.querySelectorAll(".code .copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var pre = btn.parentElement.querySelector("pre");
+      var text = pre ? pre.innerText : "";
+      var mod = /mac/i.test(navigator.platform || "") ? "Cmd+C" : "Ctrl+C";
+      function done(label) {
+        btn.textContent = label;
+        setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done("Copied"); }, function () { selectText(pre); done("Select + " + mod); });
+      } else {
+        selectText(pre); done("Select + " + mod);
+      }
+    });
+  });
+  function selectText(el) {
+    if (!el) return;
+    var range = document.createRange();
+    range.selectNodeContents(el);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+</script>
+</body>
+</html>
