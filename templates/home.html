@@ -198,6 +198,20 @@
                 right: 44px !important;
             }
 
+            .home-setup-link {
+                color: #3156A3;
+                font-size: 15px;
+                font-weight: 700;
+                white-space: nowrap;
+                text-decoration: underline;
+                text-underline-offset: 3px;
+            }
+
+            .home-setup-link:focus-visible {
+                outline: 2px solid #3156A3;
+                outline-offset: 4px;
+            }
+
             #projects-divider {
                 left: var(--home-left-gutter) !important;
                 right: var(--home-right-gutter) !important;
@@ -233,6 +247,16 @@
                 width: var(--project-card-width);
             }
 
+            @media (max-width: 640px) {
+                #home-actions {
+                    left: 40px !important;
+                    right: 20px !important;
+                    top: 72px !important;
+                    padding: 0 !important;
+                    gap: 16px !important;
+                }
+            }
+
             @media (max-width: 860px) {
                 #projects-divider {
                     top: 115px !important;
@@ -259,6 +283,7 @@
                     <div style="color: #4E4E4E; font-size: 34px; font-family: Nunito; font-weight: 700; line-height: 43.66px; word-wrap: break-word">ChromaScribe</div>
                 </div>
                 <div id="home-actions" style="padding: 20px; left: 90%; top: 0px; position: absolute; justify-content: flex-start; align-items: center; gap: 20px; display: inline-flex">
+                    <a class="home-setup-link" href="{{ url_for('llm_setup.llm_setup_guide') }}">API Key Setup</a>
                     <a href="/data-policy" style="text-decoration: none; display: inline-flex; flex-direction: row; align-items: center; justify-content: center; gap: 6px; cursor: pointer;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 3L4 7v5c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V7L12 3z"/>
