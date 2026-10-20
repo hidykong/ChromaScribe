@@ -1,0 +1,19 @@
+{
+  "name": "chromascribe",
+  "version": "1.0.0",
+  "description": "Local transcript and audio analysis without accounts or Firebase.",
+  "main": "./static/chromascribe-main.js",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/esterchen1231/ChromaScribe.git"
+  },
+  "keywords": [],
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/esterchen1231/ChromaScribe/issues"
+  },
+  "homepage": "https://github.com/esterchen1231/ChromaScribe#readme",
+  "private": true,
+  "license": "Apache-2.0"
+}
