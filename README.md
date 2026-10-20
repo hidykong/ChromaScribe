@@ -17,6 +17,8 @@ Run the following commands from the project folder. Python 3.11 or 3.12 is suppo
 
 **macOS / Linux**
 
+For Python 3.12, replace the first command below with `python3.12 -m venv .venv`.
+
 ```bash
 python3.11 -m venv .venv
 source .venv/bin/activate
@@ -26,12 +28,23 @@ cp .env.template .env
 
 **Windows PowerShell**
 
+For Python 3.12, replace the first command below with `py -3.12 -m venv .venv`.
+
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.lock
 Copy-Item .env.template .env
 ```
+
+If PowerShell blocks `Activate.ps1`, use the virtual environment's Python directly. After creating `.venv`, run:
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.lock
+Copy-Item .env.template .env
+```
+
+Continue with the AI settings below. For the remaining commands in this guide, replace `python` with `.\.venv\Scripts\python.exe`. This works without changing PowerShell's execution policy.
 
 Copy the template only on the first run; keep your existing `.env` when updating. Install [FFmpeg](https://ffmpeg.org/download.html) if you will process compressed audio. Text-only use does not require FFmpeg.
 
@@ -82,9 +95,15 @@ With your Python environment active:
 python app.py
 ```
 
+If you used the PowerShell fallback, start the app with:
+
+```powershell
+.\.venv\Scripts\python.exe app.py
+```
+
 Open **http://127.0.0.1:5001**. You can create a project or open a demo immediately. Upload your interview files and question set, review the Q&A tags and codes, choose excerpts, and open the visualization. Manual editing and saved projects remain available without a working AI service; generating new AI suggestions requires the model you configured.
 
-Stop the application with `Ctrl+C`. To run it again, activate `.venv` and run `python app.py`. Restart it after changing `.env`.
+Stop the application with `Ctrl+C`. To run it again, activate `.venv` and run `python app.py`, or use the direct PowerShell command above. Restart it after changing `.env`.
 
 ## Where your work is saved
 
