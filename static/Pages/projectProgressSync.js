@@ -241,8 +241,20 @@ function clearAllProjectCaches() {
 
 window.ChromaProjectProgress = {
   save: async () => {
-    state.dirty = true;
-    await saveToServer();
+    const scope = projectScope();
+    if (!scope) return;
+    // Explicit saves must wait for earlier writes and then capture the latest state.
+    await queueProjectSave(async () => {
+      window.clearTimeout(state.timer);
+      state.timer = null;
+      state.dirty = false;
+      try {
+        await saveBrowserState(scope);
+      } catch (error) {
+        state.dirty = true;
+        throw error;
+      }
+    });
   },
   clearCaches: clearAllProjectCaches,
   runProjectChange,

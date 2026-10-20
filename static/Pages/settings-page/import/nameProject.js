@@ -1,4 +1,5 @@
 import { filesUploaded } from "../../../chromascribe-main.js";
+import { scopeAppPath } from "../../pageTransitionOverlay.js";
 import {
   fetchGenerationProgress,
   isGenerationProgressRunning,
@@ -267,7 +268,7 @@ export async function nameProject() {
 
     if (!stateRendered) {
       // Sticky bottom bar with centered dots (activeIndex=0 for step 1)
-      renderBottomButtons(mainEditWindow, () => { window.location.href = '/'; }, uploadFiles, 0);
+      renderBottomButtons(mainEditWindow, () => { window.location.href = '/'; }, continueFromFileManager, 0);
     }
     return;
   }
@@ -455,6 +456,15 @@ function displayFileMap(FileMap) {
     const audioName = getEntryDisplayName(participantEntry.audio);
     appendCellText(audioCell, audioName || "No Audio Files", !audioName);
   });
+}
+
+function continueFromFileManager() {
+  // The demo already includes prepared transcripts and AI-generated codes.
+  if ((window.APP_MODE || "").toLowerCase() === "demo") {
+    window.location.href = scopeAppPath("/themes");
+    return;
+  }
+  uploadFiles();
 }
 
 async function getFileManagerTaggingProgress() {

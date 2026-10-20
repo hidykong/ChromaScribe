@@ -10,12 +10,14 @@ import {
 	normalizeManualSelectionOptOuts,
 	setManualCodeSelection
 } from "../../themePersistence.js?v=20260901b";
-import { navigateWithWaitingScreen } from "../../pageTransitionOverlay.js?v=20260901a";
+import { navigateWithWaitingScreen, scopeAppPath } from "../../pageTransitionOverlay.js?v=20260901a";
 
 var creatingNewTheme = false;
 let generationEtaController = null;
 let lastRemoteThemeSelectionSignature = "";
 let remoteThemeSelectionTimer = null;
+let remoteThemeSelectionSave = Promise.resolve();
+let isThemeSelectionContinuing = false;
 let hydratedThemeRecordsByKey = new Map();
 
 function normalizedThemeRecordKey(themeName) {
@@ -94,7 +96,20 @@ function buildThemeSelectionPayload() {
 	};
 }
 
+async function saveThemeSelection(payload) {
+	const response = await fetch("/api/save_selected_themes", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(payload),
+	});
+	if (!response.ok) {
+		throw new Error(`Could not save code selection (HTTP ${response.status}).`);
+	}
+	return response.json();
+}
+
 function scheduleRemoteThemeSelectionSync(payload) {
+	if (isThemeSelectionContinuing) return;
 	if (!payload || !Array.isArray(payload.themes)) return;
 
 	let signature = "";
@@ -109,21 +124,19 @@ function scheduleRemoteThemeSelectionSync(payload) {
 		clearTimeout(remoteThemeSelectionTimer);
 	}
 	remoteThemeSelectionTimer = setTimeout(async () => {
+		remoteThemeSelectionTimer = null;
 		try {
-			const response = await fetch("/api/save_selected_themes", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(payload),
-			});
-			if (!response.ok) {
-				console.warn("Failed to sync theme selection:", response.status, response.statusText);
+			const progressSync = window.ChromaProjectProgress;
+			if (progressSync?.runProjectChange) {
+				// Share the updated revision with browser-state autosave to avoid stale reloads.
+				remoteThemeSelectionSave = progressSync.runProjectChange(payload.projectId, () => saveThemeSelection(payload));
 			} else {
-				lastRemoteThemeSelectionSignature = signature;
+				remoteThemeSelectionSave = saveThemeSelection(payload);
 			}
+			await remoteThemeSelectionSave;
+			lastRemoteThemeSelectionSignature = signature;
 		} catch (error) {
 			console.warn("Failed to sync theme selection:", error);
-		} finally {
-			remoteThemeSelectionTimer = null;
 		}
 	}, 500);
 }
@@ -137,6 +150,63 @@ function persistThemeSelectionSnapshot({ syncRemote = true } = {}) {
 	}
 	if (syncRemote) {
 		scheduleRemoteThemeSelectionSync(payload);
+	}
+}
+
+function showThemeSelectionError(message) {
+	d3.select("#min_theme_error_message").remove();
+	d3.select("#main-edit-window").append("div")
+		.attr("id", "min_theme_error_message")
+		.attr("role", "alert")
+		.style("position", "absolute")
+		.style("right", "20px")
+		.style("bottom", "76px")
+		.style("max-width", "calc(100% - 40px)")
+		.style("color", "#b42318")
+		.text(message);
+}
+
+async function continueToCodeEditor(button) {
+	if (isThemeSelectionContinuing) return;
+	if (themesObject.themes.length < 2) {
+		showThemeSelectionError("Select at least two codes to continue.");
+		return;
+	}
+
+	isThemeSelectionContinuing = true;
+	button.disabled = true;
+	button.textContent = "Saving...";
+	d3.select("#min_theme_error_message").remove();
+	clearInterval(window.__themeSelectionAutosaveInterval);
+	clearTimeout(remoteThemeSelectionTimer);
+	remoteThemeSelectionTimer = null;
+
+	try {
+		// Finish earlier saves before handing this selection to the matching page.
+		await remoteThemeSelectionSave.catch(() => {});
+		persistThemeSelectionSnapshot({ syncRemote: false });
+		const response = await fetch(scopeAppPath("/themes/edit"), {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(buildThemeSelectionPayload()),
+		});
+		if (!response.ok) {
+			throw new Error(`Could not save selected codes (HTTP ${response.status}).`);
+		}
+		markSelectionComplete();
+		// Save the completed step so page initialization cannot restore a pending selection.
+		await window.ChromaProjectProgress?.save();
+		await navigateWithWaitingScreen("/themes/edit", {
+			title: "Loading Code Editor",
+			message: "Preparing selected codes and quotations...",
+		});
+	} catch (error) {
+		console.warn("Could not continue to excerpt matching:", error);
+		showThemeSelectionError("Could not save your selection. Please try Next again.");
+		isThemeSelectionContinuing = false;
+		button.disabled = false;
+		button.textContent = "Next";
+		startThemeSelectionAutosave();
 	}
 }
 
@@ -391,11 +461,9 @@ function showLoadingPopup(useLegacyWindow = false) {
 		.style("padding-left", "18px");
 
 	[
-		"Encrypted Flow: Data is encrypted at rest and in transit; only uploads + metadata are collected.",
-		"Local Processing: Runs entirely on school infrastructure (Qwen3) with no third-party cloud involvement.",
-		"No Training: Your data is strictly excluded from all AI model training or fine-tuning.",
-		"Restricted Access: Stored locally under school jurisdiction; accessible only to authorized members.",
-		"Auto-Deletion: Uploads auto-delete after 7 days; only your codes and notes are saved.",
+		"Local storage: Files and results stay in your local workspace until you remove them.",
+		"AI processing: Requests go to your configured model service. Hosted providers receive transcript text and questions.",
+		"Provider policies: Your model provider determines its own data retention and training policies. Review them before processing sensitive data.",
 	].forEach(text => {
 		const row = bulletList.append("li");
 		const match = text.match(/^([^:]+):(.*)$/);
@@ -749,7 +817,7 @@ export async function generateThemes(preGeneratedThemes = null, preSelectedTheme
 				});
 
 			suggestedLine.append("span")
-				.text(". You can select or create a few relevant codes to start.");
+				.text(". Select or create at least two codes to continue.");
 
 			description.append("div")
 				.attr("class", "theme-selection-description-or")
@@ -1010,50 +1078,7 @@ export async function generateThemes(preGeneratedThemes = null, preSelectedTheme
 		.style("color", "#ffffff")
 		.text("Next")
 		.on("click", function() {
-			if (themesObject.themes.length >= 2)
-				
-				{demoingObject.demoing = true
-					persistThemeSelectionSnapshot();
-					//console.log(themesObject.themes)
-					//editThemes();
-					//fetch('/visualization', {
-					fetch('/themes/edit', {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-						body: JSON.stringify({
-							...themesObject,
-							...(getCurrentProjectId() ? { projectId: getCurrentProjectId() } : {})
-						}),
-					})
-						.then(response => {
-							if (response.ok) {
-								markSelectionComplete();
-								void navigateWithWaitingScreen("/themes/edit", {
-									title: "Loading Code Editor",
-									message: "Preparing selected codes and quotations...",
-								});
-							} else {
-								console.error('Failed to send data', response.statusText);
-							}
-						})
-					.catch(error => {
-						console.error('Error:', error);
-					});
-				//window.location.href="/visualization"
-			}
-			else {
-				var errorMessage = d3.select(this.parentNode.parentNode).append("div")
-						.attr("id", "min_theme_error_message")
-						.attr("class", "error")
-						.attr('margin-top', "500px")
-						.style("right", "22px")
-						.text("You must select at least two themes");
-				//errorMessage.style("margin-top", this.offsetTop - this.parentNode.scrollTop - errorMessage.node().offsetHeight - 20);
-				addTail(errorMessage, 235);
-				setTimeout(function(){d3.select("#min_theme_error_message").remove()}, 5000);
-			}
-			});
+			void continueToCodeEditor(this);
+		});
 	}
 }

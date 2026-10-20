@@ -311,11 +311,9 @@ function showResumeGenerationPopup(projectTranscriptCount = 1) {
     .style("padding-left", "18px");
 
   [
-    "Encrypted Flow: Data is encrypted at rest and in transit; only uploads + metadata are collected.",
-    "Local Processing: Runs entirely on school infrastructure (Qwen3) with no third-party cloud involvement.",
-    "No Training: Your data is strictly excluded from all AI model training or fine-tuning.",
-    "Restricted Access: Stored locally under school jurisdiction; accessible only to authorized members.",
-    "Auto-Deletion: Uploads auto-delete after 7 days; only your codes and notes are saved.",
+    "Local storage: Files and results stay in your local workspace until you remove them.",
+    "AI processing: Requests go to your configured model service. Hosted providers receive transcript text and questions.",
+    "Provider policies: Your model provider determines its own data retention and training policies. Review them before processing sensitive data.",
   ].forEach(text => {
     const row = bulletList.append("li");
     const match = text.match(/^([^:]+):(.*)$/);
@@ -1609,11 +1607,9 @@ async function handleNext() {
       .style("padding-left", "18px");
 
     [
-      "Encrypted Flow: Data is encrypted at rest and in transit; only uploads + metadata are collected.",
-      "Local Processing: Runs entirely on school infrastructure (Qwen3) with no third-party cloud involvement.",
-      "No Training: Your data is strictly excluded from all AI model training or fine-tuning.",
-      "Restricted Access: Stored locally under school jurisdiction; accessible only to authorized members.",
-      "Auto-Deletion: Uploads auto-delete after 7 days; only your codes and notes are saved.",
+      "Local storage: Files and results stay in your local workspace until you remove them.",
+      "AI processing: Requests go to your configured model service. Hosted providers receive transcript text and questions.",
+      "Provider policies: Your model provider determines its own data retention and training policies. Review them before processing sensitive data.",
     ].forEach(text => {
       const row = bulletList.append("li");
       const match = text.match(/^([^:]+):(.*)$/);
