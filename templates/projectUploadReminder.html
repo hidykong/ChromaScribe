@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/d3@4.13.0/build/d3.min.js"></script>
+    <link rel="stylesheet" href="../static/styles.css?v=20260522a">
+    <link rel="icon" type="image/png" href="/static/images/ChromascribeLogo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&family=Nunito:wght@600;700&display=swap" rel="stylesheet">
+    <title>Upload Files First</title>
+    <style>
+        #settings-page {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        #editing {
+            display: flex;
+            flex: 1 1 auto;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        #main-reminder-window {
+            flex: 1 1 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px;
+            background:
+                radial-gradient(circle at top left, rgba(58, 97, 221, 0.10), transparent 30%),
+                linear-gradient(180deg, #eef2ff 0%, #e5e5e5 55%);
+        }
+
+        .reminder-card {
+            width: min(560px, 100%);
+            background: #ffffff;
+            border: 1px solid #d9e2ff;
+            border-radius: 28px;
+            box-shadow: 0 24px 60px rgba(0, 48, 83, 0.12);
+            padding: 48px 42px;
+            text-align: center;
+        }
+
+        .reminder-icon {
+            width: 84px;
+            height: 84px;
+            margin: 0 auto 24px auto;
+            border-radius: 24px;
+            background: #edf2ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reminder-icon img {
+            width: 34px;
+            height: 34px;
+        }
+
+        .reminder-title {
+            margin: 0;
+            color: #111827;
+            font-family: Nunito, sans-serif;
+            font-size: 34px;
+            line-height: 1.15;
+            font-weight: 700;
+        }
+
+        .reminder-message {
+            margin: 18px 0 0 0;
+            color: #5b6474;
+            font-family: Inter, sans-serif;
+            font-size: 17px;
+            line-height: 1.6;
+        }
+
+        .reminder-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 28px;
+            padding: 14px 24px;
+            min-width: 210px;
+            border-radius: 14px;
+            background: #3a61dd;
+            color: #ffffff;
+            font-family: Nunito, sans-serif;
+            font-size: 17px;
+            font-weight: 700;
+            text-decoration: none;
+            box-shadow: 0 12px 28px rgba(58, 97, 221, 0.22);
+        }
+
+        .reminder-button:hover {
+            color: #ffffff;
+            background: #2f52c0;
+        }
+
+        @media (max-width: 768px) {
+            #main-reminder-window {
+                padding: 20px;
+            }
+
+            .reminder-card {
+                padding: 36px 24px;
+                border-radius: 22px;
+            }
+
+            .reminder-title {
+                font-size: 28px;
+            }
+
+            .reminder-message {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body class="container-fluid" style="padding-left: 0; padding-right: 0; margin-left: 0; background: #E5E5E5; font-family: Nunito; font-size: 16px;">
+    <div id="settings-page">
+        <div id="editing">
+            <div id="settingsTabs" style="background: #ffffff; box-shadow: 0px 4px 4px 4px rgba(0, 48, 83, 0.25); height: 100%; overflow: auto;"></div>
+            <div id="main-reminder-window">
+                <div class="reminder-card">
+                    <div class="reminder-icon">
+                        <img src="/static/images/Disable_Filesmanager.png" alt="File manager">
+                    </div>
+                    <h1 class="reminder-title">{{ reminder_title }}</h1>
+                    <p class="reminder-message">{{ reminder_message }}</p>
+                    <a class="reminder-button" href="{{ cta_href }}">{{ cta_label }}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/static/Pages/projectProgressSync.js?v=20260823a" defer></script>
+    <script src="https://unpkg.com/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.js"></script>
+    <script type="module">
+        import { showSettings, toggleCollapse } from '../static/Pages/settings-page/menupanel.js?v=20260901a';
+
+        showSettings();
+        d3.select(`#{{ active_tab }}`).select("div").style("background", "#3A61DD1F").select("img")
+            .attr("src", "{{ active_icon }}");
+        toggleCollapse(true);
+    </script>
+</body>
+</html>

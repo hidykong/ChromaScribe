@@ -1,0 +1,991 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/d3@4.13.0/build/d3.min.js"></script>
+        <link rel="stylesheet" href="../static/styles.css?v=20260801a">
+        <link rel="icon" type="image/png" href="/static/images/ChromascribeLogo.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&family=Nunito:wght@600&display=swap" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" rel="stylesheet">
+        <style>
+            #playbar.playbar-disabled {
+                opacity: 0.58;
+                filter: grayscale(1);
+            }
+
+            #playbar.playbar-disabled #full-play-button,
+            #playbar.playbar-disabled #backwardcontrol,
+            #playbar.playbar-disabled #forwardcontrol {
+                cursor: not-allowed;
+            }
+
+            #playbar.playbar-disabled #full-slider {
+                background-color: #c8c8c8 !important;
+                cursor: not-allowed;
+            }
+
+            #visualization-toast {
+                align-items: center;
+                background: #111827;
+                border-left: 4px solid #3A61DD;
+                border-radius: 8px;
+                box-shadow: 0 12px 30px rgba(15, 23, 42, 0.2);
+                color: #ffffff;
+                display: none;
+                font-family: Inter, sans-serif;
+                gap: 10px;
+                max-width: min(320px, calc(100vw - 32px));
+                padding: 10px 13px;
+                position: fixed;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                z-index: 13000;
+            }
+
+            #visualization-toast.visible {
+                display: flex;
+            }
+
+            #visualization-toast[data-state="success"] {
+                border-left-color: #16a34a;
+            }
+
+            #visualization-toast[data-state="error"] {
+                border-left-color: #dc2626;
+            }
+
+            .visualization-toast-spinner {
+                animation: visualization-toast-spin 0.85s linear infinite;
+                border: 2px solid rgba(255, 255, 255, 0.36);
+                border-radius: 999px;
+                border-top-color: #ffffff;
+                display: inline-block;
+                flex: 0 0 auto;
+                height: 15px;
+                width: 15px;
+            }
+
+            #visualization-toast[data-state="success"] .visualization-toast-spinner,
+            #visualization-toast[data-state="error"] .visualization-toast-spinner {
+                animation: none;
+                border: none;
+                height: auto;
+                width: auto;
+            }
+
+            #visualization-toast[data-state="success"] .visualization-toast-spinner::before {
+                content: "OK";
+                color: #bbf7d0;
+                font-size: 11px;
+                font-weight: 900;
+            }
+
+            #visualization-toast[data-state="error"] .visualization-toast-spinner::before {
+                content: "!";
+                color: #fecaca;
+                font-size: 13px;
+                font-weight: 900;
+            }
+
+            .visualization-toast-text {
+                font-size: 13px;
+                font-weight: 800;
+                line-height: 1.25;
+            }
+
+            #graph-holder #graph {
+                transition: filter 160ms ease, opacity 160ms ease;
+            }
+
+            #graph-holder.visualization-is-loading #graph {
+                filter: blur(8px);
+                opacity: 0.42;
+                pointer-events: none;
+                user-select: none;
+            }
+
+            #visualization-canvas-veil {
+                background: rgba(238, 237, 239, 0.46);
+                bottom: 0;
+                display: none;
+                left: 0;
+                pointer-events: auto;
+                position: absolute;
+                right: 0;
+                top: 90px;
+                z-index: 3;
+            }
+
+            #graph-holder.visualization-is-loading #visualization-canvas-veil {
+                display: block;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                #graph-holder #graph {
+                    transition: none;
+                }
+            }
+
+            @keyframes visualization-toast-spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        </style>
+    </head>
+    <body class="container-fluid" style="padding-left: 0; padding-right: 0; margin-left: 0; background: #E5E5E5; 
+    font-family: Nunito; font-size: 16px;">
+    <div id="visualization-toast" class="visible" data-state="loading" role="status" aria-live="polite">
+        <span class="visualization-toast-spinner" aria-hidden="true"></span>
+        <span class="visualization-toast-text">Loading visualization...</span>
+    </div>
+    <div id="main-page" style="display: none; height: 100%;">
+        <div id="settingsTabs" style="background: #ffffff; box-shadow: 0px 4px 4px 4px rgba(0, 48, 83, 0.25); z-index: 2;
+        height: 100%; "></div>
+        
+    <div id="vis-holder" style="display: flex; height: 100%; width: 100%; padding-left: 10px; overflow: hidden;">
+    <!-- <div id="vis-holder" style="display: flex; height: 100%; position: absolute; left:16%;right: 0;top: 0; bottom: 0; width: auto; padding-left: 10px; overflow: hidden;"> -->
+        <div id="filtermenu">
+            <button id="close-btn" onclick="showMenu()">×</button>
+        </div>
+        <div id="visual" class="container-fluid" style="width: 100%; height: 100%; padding-left: 0;
+        padding-right: 0; margin-left: 0; margin-right: 0;">
+        <div id="patient_results">
+            <div class="flex-container container" style="display: flex; width: 100%; height: 100%; 
+            flex-direction: column; flex-wrap: wrap; padding-left: 0; padding-right: 0; margin-left: 0; 
+            margin-top: 22px; margin-bottom: 22px;"> 
+                <div id="div1" class="flex-graph-legend" style="display: flex; width: 100%; height: 100%; 
+                flex-wrap: wrap;">
+                <div id="theme-legend" class="sections" style="position: absolute; font-family: Inter; height: 91px; left: 90px; width: 62%; 
+                display: flex; flex-direction: row; gap: 12px; overflow-x: auto; right: 495px; align-items: center;">
+                    <button id="neutral" class="theme-labels" style="margin-left: 20px; width: 100px;
+                    border: 2px solid #eeedef; color: #000000;">Neutral</button>
+                    {% set initial_themes = (themeObject2.get('themes', []) if themeObject2 else []) %}
+                    {% for theme in initial_themes %}
+                    {% if theme is mapping %}
+                    {% set raw_name = theme.get('themeName', '') %}
+                    {% set raw_color = theme.get('color', '#579AE2') %}
+                    {% else %}
+                    {% set raw_name = theme %}
+                    {% set raw_color = '#579AE2' %}
+                    {% endif %}
+                    {% set theme_name = (raw_name|string).strip() %}
+                    {% if theme_name %}
+                    <button
+                        id="theme-ss-{{ loop.index0 }}"
+                        class="theme-labels"
+                        data-theme="{{ theme_name }}"
+                        style="border: 2px solid {{ raw_color }}; color: {{ raw_color }};"
+                    >{{ theme_name.replace('_', ' ') }}</button>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <!--<button id="edit-themes-button" style="position: absolute; margin-top: 25px; right: 515px; 
+                background: #F4F4F4; border-radius: 5px; width: 40px; height: 40px;">
+                    <img src="../static/images/edit.png" style="height: 24px; width: 24px;"></img>
+                </button>-->
+                
+
+    <div id="graph-holder" class="sections visualization-is-loading" aria-busy="true" style="position: absolute; display: block; flex: 0 660px 0;  width: 62%;
+                bottom: 73px; top: 115px; right: 495px; left: 90px; margin-top: 22px; margin-bottom: 22px; 
+                float: left; overflow: auto; margin-right: 0px; z-index: 0;">
+               <div id="visualization-canvas-veil" aria-hidden="false"></div>
+               
+               <div id="tool-ribbon" style="width: 100%; position: sticky; background: #ffffff;padding: 20px; display: flex; height: auto; flex-wrap: wrap; flex: 0 660px 0; 
+                bottom: 73px; top: 0px; right: 495px; left: 10px;  z-index: 4;
+                float: right; overflow: auto; gap: 20px;">
+
+    
+    <!-- Legend container -->
+    <div id="speaker-legend" style="position: relative; display: block;height: 50px;; 
+                z-index: 0; background: #eeedef; padding: 5px; border-radius: 10px; font-size: 12px; padding: 5px;align-items: center;">
+                    <div class="legend-item" style="margin-right: 10px;">
+                        <img src="/static/images/interviewer.svg" width="20" height="20" alt="Interviewer">
+                        <span>Interviewer</span>
+                    </div>
+                    <div class="legend-item">
+                        <img src="/static/images/user_green.png" width="20" height="20" alt="Participant">
+                        <span>Participant</span>
+                    </div>
+                </div>
+
+    <!-- Toggle container -->
+    <div class="toggle-container" style="position: relative; display: flex; height: 50px; margin-top: 0; 
+                justify-content: center; align-items: center; background-color: #f0f0f0; z-index: 2; padding: 5px; 
+                border-radius: 10px; font-size: 12px;">
+        <button id="timeline-view" class="toggle-button active">Timeline view</button>
+        <button id="questions-view" class="toggle-button">Question View</button>
+    </div>
+
+    <button id="color-adjustment-button" class="visualization-tool-button" type="button">
+        Color Adjustment
+    </button>
+
+    <div id="nonverbal-cues-panel" class="nonverbal-cues-panel" style="position: relative; display: flex; flex-direction: column; justify-content: center; background: #f4f6fb; padding: 6px 10px; border-radius: 10px; min-height: 50px; gap: 6px;">
+        <div class="nonverbal-row">
+            <span class="nonverbal-title">Non-verbal cues</span>
+            <label class="nonverbal-switch">
+                <input type="checkbox" id="nonverbal-cues-toggle" checked>
+                <span class="nonverbal-slider"></span>
+            </label>
+            <span id="nonverbal-cues-state" class="nonverbal-state on">On</span>
+        </div>
+        <div class="nonverbal-threshold-row">
+            <span class="nonverbal-threshold-label">Confidence</span>
+            <input
+                type="range"
+                id="nonverbal-threshold-slider"
+                class="nonverbal-threshold-slider"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.65"
+            >
+            <span id="nonverbal-threshold-value" class="nonverbal-threshold-value">0.65</span>
+        </div>
+        <div class="nonverbal-threshold-row">
+            <span class="nonverbal-threshold-label">Min silence</span>
+            <input
+                type="range"
+                id="nonverbal-silence-min-slider"
+                class="nonverbal-threshold-slider"
+                min="5"
+                max="12"
+                step="0.5"
+                value="5"
+            >
+            <span id="nonverbal-silence-min-value" class="nonverbal-threshold-value">5.0s+</span>
+        </div>
+        <div class="nonverbal-legend">
+            <span class="cue-pill laughter">😂 Laughter</span>
+            <span class="cue-pill silence">🤫 Long silence</span>
+        </div>
+    </div>
+
+    <!-- Zoom container -->
+    <div id="zoom-holder" style="position: relative; display: flex; height: 50px; margin-top: 0; 
+                z-index: 1; background: #F4F4F4; padding: 14px; border-radius: 10px; align-items: center;">
+        <img src="../static/images/free-minus-icon-3108-thumb.png" style="height:15px;">
+        <input type="range" id="zoom-slider" class="slider" max="10" min="1" value="1" style="margin-left: 5px; 
+                    margin-right: 5px; height: 5px; border-radius: 12px; width: 100px;">
+        <img src="../static/images/add.png" style="height:15px;">
+    </div>
+
+    <!-- Menu button [Uncomment to make filter icon visible]-->
+    <button id="menu-button"  style="position: relative; display: block; z-index: 2;height: 50px; padding-left: 16px; padding-right: 16px; padding-top: 16px; padding-bottom: 16px;  background: #F4F4F4; border-radius: 5px; overflow: hidden; border: 1px #EDEDED; justify-content: flex-start; align-items: center; ">
+        <img id="menu-icon" class="interactive-icon" src="../static/images/filter.png" style="width: 16px; height: 16px; border: 1.20px #000000"></img>
+    </button>
+</div>
+                    <svg id= "graph" style="display: block; margin-top: 60px; width: 300%;height: auto;"></svg>
+                </div>
+            </div>
+                <div id= "div2" class="flex-container-boxes" style="display: flex; position: absolute; bottom: 94px; 
+                flex-direction: column; flex-wrap: nowrap; width: 30%; z-index: 1; right: 22px; top: 22px; gap: 10px;">
+                <div id="transcript-header" class="sections transcript-header-bar" style="width: 100%;
+                margin-right: 35px; flex: 0 0 auto;">
+                    <div class="transcript-title-group">
+                        <div class="title transcript-header-title">Transcript</div>
+                    </div>
+                    <button id="theme-quotes-btn" class="theme-quotes-btn" type="button" hidden>Go to Quotations</button>
+                    <div class="search-container transcript-search">
+                        <input type="text" id="searchInput" class="transcript-search-input" placeholder="Search...">
+                        <button type="submit" id="search-btn" class="transcript-search-btn">
+                            <img src="../static/images/magnifying-glass.png" class="transcript-search-icon interactive-icon">
+                        </button>
+                    </div>
+                </div>
+                    <div id="transcript" class="sections" style="width: 100%; flex: 1 1 auto; min-height: 0;
+                    margin-right: 35px; display: block; overflow: auto !important; white-space: normal; word-wrap: break-word; padding: 10px;"></div>
+                </div>
+                
+            </div>
+            
+        </div>
+        <div id="playbar" class="sections" style="display: flex; position: absolute; height: 47px; 
+        left: 90px; z-index: 1; right: 20px; align-items: center; bottom: 22px;">
+            <audio id="full-audiofile" src="" type="audio/mpeg" preload="metadata"></audio>
+            <div id="backwardcontrol" style="display: flex;">
+                <img id="10-back" src="../static/images/rewind-10-seconds.svg" style="width: 30px; left:20px"></img>
+            </div>
+            <div id="full-play-button" style="float: left; margin: 7px; border-radius: 50%; 
+            background-color: #7c7c7c; width: 33px; height: 33px;" role="button">
+                <div id="full-play-pause-holder" class="play">
+                    <img id="full-play-pause" src="../static/images/play-button.png" style="width: 20px;"></img>
+                </div>
+            </div>
+            <div id="forwardcontrol" style="display: flex;">
+                <img id="10-front" src="../static/images/forward-10-seconds.svg" style="width: 30px;"></img>
+            </div>
+            <div id="full-controls" class="col" style="display: flex; width: 100%; margin: 10px; margin-top: 12px;">
+                <span id="full-current-time" style="font-size: 15px; flex-grow: 1;">00:00</span>
+                <input type="range" id="full-slider" class="slider" max="" value="0" style="margin-left: 5px; 
+                margin-right: 5px; height: 5px; -webkit-appearance: none; appearance: none; background-color: #7c7c7c;
+                border-radius: 12px; flex-grow: 300; margin-top: 8px;">
+                <span id="full-duration" style="font-size: 15px; float: right; margin-right: 5px; 
+                margin-left: 5px; flex-grow: 1;"></span>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+        <script type="module" src="/static/Pages/projectProgressSync.js?v=20260823a" defer></script>
+        <script src="https://unpkg.com/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+        <script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
+        <script type="module">
+            import { displayViz } from '../static/Pages/settings-page/themes/generateVisualization.js?v=20260901b';
+            import { displayQuestions } from '../static/Pages/settings-page/themes/generateQuestionViz.js?v=20260901b';
+            import {
+                getStoredThemePayload as getWorkspaceStoredThemePayload,
+                subscribeToThemePayloadUpdates
+            } from '../static/Pages/themePersistence.js?v=20260901b';
+            import { initializeColorAdjustmentPanel } from '../static/Pages/main-page/colorAdjustmentPanel.js?v=20260901b';
+            import { hydrateFileMapFromServer } from '../static/Pages/fileMapSync.js?v=20260601b';
+            import { showSettings , toggleCollapse } from '../static/Pages/settings-page/menupanel.js?v=20260901a';
+            import { selectedParticipantObject, firstClickObject, loadTranscripts} from "../static/chromascribe-main.js?v=20260901b";
+            import * as nonVerbalCueModule from "../static/Pages/main-page/nonVerbalCues.js?v=20260601b";
+            import { showMenu } from "../static/Pages/main-page/demographicFiltering.js?v=20260601b";
+            window.APP_MODE = '{{ mode }}';
+            window.CURRENT_PROJECT_ID = '{{ session.get("current_project_id", "") }}';
+            window.USER_WORKSPACE_KEY = '{{ session.get("user_workspace_key", "") }}';
+            try {
+                if (window.USER_WORKSPACE_KEY) localStorage.setItem("currentWorkspaceKey", window.USER_WORKSPACE_KEY);
+                if (window.CURRENT_PROJECT_ID) localStorage.setItem("currentProjectId", window.CURRENT_PROJECT_ID);
+            } catch (error) {
+                console.warn("Could not sync project context:", error);
+            }
+            window.VISUALIZATION_SELECTED_EXCERPTS_ONLY = false;
+            window.PROCESSED_TRANSCRIPTS_URL = '{{ processed_transcripts_url or "" }}';
+            //var username = "{{ username }}";
+            showSettings();
+            // Ensure visualization layout is visible immediately (showSettings hides main-page)
+            d3.select("#settings-page").style("display", "none");
+            d3.select("#main-page").style("display", "flex");
+            d3.select("#close-btn").on("click", function() {
+                showMenu();
+            });
+            d3.select("#visualization-tab").select("div").style("background", "#3A61DD1F").select("img")
+            .attr("src", "/static/images/Enable_Visualization.png");
+            toggleCollapse(true)
+            
+            var data;
+            var view = "timeline";
+            let lastThemeSignature = "";
+            let lastTranscriptMetaSignature = "";
+            let renderInFlight = false;
+            let pendingRender = null;
+            let fileMapRefreshPromise = null;
+            const REFRESH_POLL_MS = 12000;
+            let visualizationToastTimer = null;
+
+            function setVisualizationCanvasLoading(isLoading) {
+                const graphHolder = document.getElementById("graph-holder");
+                const veil = document.getElementById("visualization-canvas-veil");
+                if (!graphHolder) return;
+
+                graphHolder.classList.toggle("visualization-is-loading", isLoading);
+                graphHolder.setAttribute("aria-busy", isLoading ? "true" : "false");
+                if (veil) {
+                    veil.setAttribute("aria-hidden", isLoading ? "false" : "true");
+                    if (isLoading) {
+                        const ribbon = document.getElementById("tool-ribbon");
+                        if (ribbon) {
+                            const holderRect = graphHolder.getBoundingClientRect();
+                            const ribbonRect = ribbon.getBoundingClientRect();
+                            veil.style.top = `${Math.max(0, ribbonRect.bottom - holderRect.top)}px`;
+                        }
+                    }
+                }
+            }
+
+            function waitForStableVisualizationPaint() {
+                return new Promise((resolve) => {
+                    window.requestAnimationFrame(() => {
+                        window.requestAnimationFrame(resolve);
+                    });
+                });
+            }
+
+            function showVisualizationToast(state, message, options = {}) {
+                const toast = document.getElementById("visualization-toast");
+                if (!toast) return;
+                const textNode = toast.querySelector(".visualization-toast-text");
+                if (visualizationToastTimer) {
+                    window.clearTimeout(visualizationToastTimer);
+                    visualizationToastTimer = null;
+                }
+                toast.dataset.state = state || "loading";
+                if (textNode) textNode.textContent = message || "Loading visualization...";
+                toast.classList.add("visible");
+                if (options.autoDismissMs) {
+                    visualizationToastTimer = window.setTimeout(() => {
+                        toast.classList.remove("visible");
+                        visualizationToastTimer = null;
+                    }, options.autoDismissMs);
+                }
+            }
+
+            function visualizationGraphHasRenderedContent() {
+                return Boolean(document.querySelector(
+                    "#graph #speech, #graph .speech-rect, #graph .selected-excerpt-overlay, #graph .fixedYAxisIcons, #graph .x-axis, #graph .axis"
+                ));
+            }
+
+            function hasSelectedThemes(themePayload) {
+                return (
+                    themePayload &&
+                    Array.isArray(themePayload.themes) &&
+                    themePayload.themes.length > 0
+                );
+            }
+
+            function themePayloadIsNeutralPreview(themePayload) {
+                const previewState = String(themePayload && themePayload.visualizationPreviewState || "").trim().toLowerCase();
+                return previewState === "neutral_unapplied" && !hasSelectedThemes(themePayload);
+            }
+
+            function normalizeProgressMessage(message) {
+                return String(message || "").trim().toLowerCase();
+            }
+
+            function isGenerationProgressRunning(progress) {
+                const stage = Number(progress && progress.stage);
+                const message = normalizeProgressMessage(progress && progress.message);
+                return (
+                    [0, 1, 2, 3].includes(stage) &&
+                    !["idle", "not started", "complete", "demo data ready"].includes(message)
+                );
+            }
+
+            async function fetchGenerationProgress() {
+                if (window.APP_MODE === "demo") return null;
+                try {
+                    const projectId = localStorage.getItem("currentProjectId");
+                    const projectParam = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+                    const response = await fetch(`/progress?t=${Date.now()}${projectParam}`, { cache: "no-store" });
+                    if (!response.ok) return null;
+                    return await response.json();
+                } catch (error) {
+                    console.warn("Could not refresh generation progress:", error);
+                    return null;
+                }
+            }
+
+            async function shouldBlankVisualizationForGeneration(candidatePayload = null) {
+                if (hasSelectedThemes(candidatePayload)) {
+                    return false;
+                }
+                return isGenerationProgressRunning(await fetchGenerationProgress());
+            }
+
+            function resolveThemePayload(baseThemePayload, latestThemePayload) {
+                const baseHasThemes = hasSelectedThemes(baseThemePayload);
+                const latestHasThemes = hasSelectedThemes(latestThemePayload);
+
+                if (themePayloadIsNeutralPreview(latestThemePayload)) return latestThemePayload;
+                if (latestHasThemes && themePayloadIsApplied(latestThemePayload)) return latestThemePayload;
+                if (baseHasThemes && latestHasThemes && shouldPreferBaseThemePayload(baseThemePayload, latestThemePayload)) {
+                    return baseThemePayload;
+                }
+                if (latestHasThemes) return latestThemePayload;
+                if (baseHasThemes) return baseThemePayload;
+                if (latestThemePayload && Array.isArray(latestThemePayload.themes)) return latestThemePayload;
+                if (baseThemePayload && Array.isArray(baseThemePayload.themes)) return baseThemePayload;
+                return { themes: [] };
+            }
+
+            function setVisualizationPreviewState(themePayload) {
+                window.VISUALIZATION_PREVIEW_STATE = String(
+                    themePayload && themePayload.visualizationPreviewState
+                        ? themePayload.visualizationPreviewState
+                        : ""
+                );
+            }
+
+            function themePayloadIsApplied(themePayload) {
+                if (!themePayload || typeof themePayload !== "object") return false;
+                if (themePayload.appliedToVisualization === true) return true;
+                const selectionStage = String(themePayload.selectionStage || "").trim().toLowerCase();
+                if (
+                    selectionStage === "applied_codes" ||
+                    selectionStage === "apply_codes" ||
+                    selectionStage === "visualization_applied" ||
+                    selectionStage === "code_manager"
+                ) {
+                    return true;
+                }
+                const selectionSource = String(themePayload.selectionSource || "").trim().toLowerCase();
+                return selectionSource === "apply_codes" ||
+                    selectionSource === "applied_codes" ||
+                    selectionSource === "visualization_applied" ||
+                    selectionSource === "ai_generate_more_codes" ||
+                    selectionSource === "ai_more_codes_generated";
+            }
+
+            function themePayloadIsMatchingExcerptSelection(themePayload) {
+                if (!themePayload || typeof themePayload !== "object") return false;
+                const themes = Array.isArray(themePayload.themes) ? themePayload.themes : [];
+                return themes.some(theme => {
+                    const words = Array.isArray(theme && theme.words) ? theme.words : [];
+                    return words.some(word => {
+                        if (!word || typeof word !== "object") return false;
+                        const wordStage = String(word.selectionStage || "").trim().toLowerCase();
+                        const wordSource = String(word.selectionSource || word.selectedSource || "").trim().toLowerCase();
+                        return word.selectedInMatching === true ||
+                            word.matchingSelection === true ||
+                            wordStage === "matching_excerpts" ||
+                            wordStage === "matching_excerpts_selected" ||
+                            wordSource === "matching_excerpts" ||
+                            wordSource === "selected_excerpts" ||
+                            wordSource === "theme_excerpt_selection";
+                    });
+                });
+            }
+
+            function updateVisualizationSelectionMode(themePayload) {
+                const previewState = String(themePayload && themePayload.visualizationPreviewState || "").trim().toLowerCase();
+                const isPreview = previewState === "theme_selection_unapplied" || previewState === "neutral_unapplied";
+                window.VISUALIZATION_SELECTED_EXCERPTS_ONLY = (themePayloadIsApplied(themePayload) || themePayloadIsMatchingExcerptSelection(themePayload)) && !isPreview;
+            }
+
+            function countThemes(themePayload) {
+                return Array.isArray(themePayload && themePayload.themes) ? themePayload.themes.length : 0;
+            }
+
+            function countThemeWords(themePayload) {
+                const themes = Array.isArray(themePayload && themePayload.themes) ? themePayload.themes : [];
+                return themes.reduce((total, theme) => {
+                    const words = Array.isArray(theme && theme.words) ? theme.words : [];
+                    return total + words.length;
+                }, 0);
+            }
+
+            function themeNameSignature(themePayload) {
+                const themes = Array.isArray(themePayload && themePayload.themes) ? themePayload.themes : [];
+                return themes
+                    .map((theme) => String(theme && (theme.themeName || theme.theme || theme.name) || "").trim().toLowerCase())
+                    .filter(Boolean)
+                    .sort()
+                    .join("||");
+            }
+
+            function themePayloadLooksLikeLiveSelection(themePayload) {
+                if (!themePayload || typeof themePayload !== "object" || themePayloadIsApplied(themePayload)) return false;
+                const previewState = String(themePayload.visualizationPreviewState || "").trim().toLowerCase();
+                if (previewState === "theme_selection_unapplied" || previewState === "matching_excerpts_unapplied") return true;
+                const selectionStage = String(themePayload.selectionStage || "").trim().toLowerCase();
+                if (selectionStage === "theme_selection" || selectionStage === "matching_excerpts") return true;
+                const selectionSource = String(themePayload.selectionSource || "").trim().toLowerCase();
+                return selectionSource === "theme_selection" || selectionSource === "matching_excerpts";
+            }
+
+            function shouldPreferBaseThemePayload(baseThemePayload, latestThemePayload) {
+                if (!baseThemePayload || !latestThemePayload) return false;
+                const baseIsApplied = themePayloadIsApplied(baseThemePayload);
+                const latestIsApplied = themePayloadIsApplied(latestThemePayload);
+                const baseThemeCount = countThemes(baseThemePayload);
+                const latestThemeCount = countThemes(latestThemePayload);
+                const baseWordCount = countThemeWords(baseThemePayload);
+                const latestWordCount = countThemeWords(latestThemePayload);
+                const hasDifferentThemeSet = themeNameSignature(baseThemePayload) !== themeNameSignature(latestThemePayload);
+
+                if (latestIsApplied && !baseIsApplied) {
+                    return themePayloadLooksLikeLiveSelection(baseThemePayload) &&
+                        (hasDifferentThemeSet || baseThemeCount > latestThemeCount || baseWordCount > latestWordCount);
+                }
+                if (baseIsApplied && !latestIsApplied) return true;
+                if (baseThemeCount > latestThemeCount) return true;
+                return baseThemeCount === latestThemeCount && baseWordCount > latestWordCount;
+            }
+
+            function getStoredThemePayload() {
+                try {
+                    const payload = getWorkspaceStoredThemePayload();
+                    if (payload && Array.isArray(payload.themes) && payload.themes.length > 0) {
+                        return {
+                            ...payload,
+                            selectionSource: payload.selectionSource || "theme_selection",
+                            selectionStage: payload.selectionStage || "theme_selection",
+                            appliedToVisualization: payload.appliedToVisualization === true,
+                            visualizationPreviewState: payload.visualizationPreviewState || "theme_selection_unapplied"
+                        };
+                    }
+                } catch (error) {
+                    console.warn("Could not restore local theme selection snapshot:", error);
+                }
+                return null;
+            }
+
+            subscribeToThemePayloadUpdates(async function(nextPayload) {
+                if (nextPayload && Array.isArray(nextPayload.themes)) {
+                    const latest = await fetchLatestThemes();
+                    const effective = resolveThemePayload(null, latest);
+                    data = effective || { themes: [] };
+                    lastThemeSignature = JSON.stringify(data || {});
+                    await renderVisualization(data, window.view || "timeline");
+                    window.setTimeout(refreshThemesIfChanged, 1000);
+                    return;
+                }
+                if (await shouldBlankVisualizationForGeneration()) {
+                    data = { themes: [] };
+                    lastThemeSignature = JSON.stringify(data);
+                    await renderVisualization(data, window.view || "timeline");
+                    return;
+                }
+                await refreshThemesIfChanged();
+            });
+
+            async function refreshForFileMapChange(options = {}) {
+                if (fileMapRefreshPromise) return fileMapRefreshPromise;
+                fileMapRefreshPromise = (async function() {
+                    if (options.hydrate === true) {
+                        await hydrateFileMapFromServer(localStorage.getItem("currentProjectId"));
+                    }
+                    if (typeof nonVerbalCueModule.invalidateNonVerbalCueData === "function") {
+                        nonVerbalCueModule.invalidateNonVerbalCueData();
+                    }
+                    lastTranscriptMetaSignature = "";
+                    await loadTranscripts(true);
+                    await renderVisualization(data || { themes: [] }, window.view || "timeline");
+                })();
+                try {
+                    await fileMapRefreshPromise;
+                } finally {
+                    fileMapRefreshPromise = null;
+                }
+            }
+
+            window.addEventListener("storage", async function(event) {
+                if (!event || !event.key) return;
+                if (!event.key.includes("FileMap_MatchedData") && !event.key.startsWith("data.json")) return;
+                await refreshForFileMapChange();
+            });
+
+            window.addEventListener("filemap:updated", function() {
+                void refreshForFileMapChange();
+            });
+
+            window.addEventListener("themes:generation-started", function() {
+                void refreshForFileMapChange({ hydrate: true });
+            });
+
+            window.addEventListener("themes:code-suggestions-updated", function() {
+                void refreshThemesIfChanged();
+            });
+
+            async function fetchLatestThemes() {
+                try {
+                    const endpoint = "/api/load_selected_themes";
+                    const projectId = localStorage.getItem("currentProjectId");
+                    const projectParam = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+                    const response = await fetch(`${endpoint}?visualizationOnly=1&requireApplied=1&t=${Date.now()}${projectParam}`, { cache: "no-store" });
+                    if (!response.ok) return;
+                    const latest = await response.json();
+                    return latest;
+                } catch (error) {
+                    console.warn("Failed to refresh themes:", error);
+                    return null;
+                }
+            }
+
+            async function renderVisualization(themeData, viewMode, options = {}) {
+                if (renderInFlight) {
+                    pendingRender = { themeData, viewMode, options };
+                    return;
+                }
+                renderInFlight = true;
+                const mode = viewMode === "question" ? "question" : "timeline";
+                const blurCanvas = options.blurCanvas === true;
+                if (blurCanvas) setVisualizationCanvasLoading(true);
+                showVisualizationToast("loading", mode === "question" ? "Loading question view..." : "Loading visualization...");
+                try {
+                    setVisualizationPreviewState(themeData);
+                    updateVisualizationSelectionMode(themeData);
+                    if (mode === "question") {
+                        await displayQuestions(themeData, mode);
+                    } else {
+                        await displayViz(themeData, mode);
+                    }
+                    if (blurCanvas) {
+                        await waitForStableVisualizationPaint();
+                        setVisualizationCanvasLoading(false);
+                    }
+                    showVisualizationToast("success", mode === "question" ? "Question view ready" : "Visualization ready", {
+                        autoDismissMs: 2200
+                    });
+                } catch (error) {
+                    if (blurCanvas) setVisualizationCanvasLoading(false);
+                    if (visualizationGraphHasRenderedContent()) {
+                        console.warn("Visualization render finished with a non-fatal post-render error:", error);
+                        showVisualizationToast("success", mode === "question" ? "Question view ready" : "Visualization ready", {
+                            autoDismissMs: 2200
+                        });
+                        return;
+                    }
+                    showVisualizationToast("error", "Visualization failed to load", {
+                        autoDismissMs: 5000
+                    });
+                    throw error;
+                } finally {
+                    if (blurCanvas) setVisualizationCanvasLoading(false);
+                    renderInFlight = false;
+                    if (pendingRender) {
+                        const next = pendingRender;
+                        pendingRender = null;
+                        void renderVisualization(next.themeData, next.viewMode, next.options);
+                    }
+                }
+            }
+
+            async function refreshThemesIfChanged() {
+                const latest = await fetchLatestThemes();
+                const effective = resolveThemePayload(data, latest);
+                if (await shouldBlankVisualizationForGeneration(effective)) {
+                    const blankPayload = { themes: [] };
+                    const blankSignature = JSON.stringify(blankPayload);
+                    if (blankSignature !== lastThemeSignature) {
+                        lastThemeSignature = blankSignature;
+                        data = blankPayload;
+                        await renderVisualization(data, window.view || "timeline");
+                    }
+                    return;
+                }
+                if (!latest) return;
+                const signature = JSON.stringify(effective || {});
+                if (signature !== lastThemeSignature) {
+                    lastThemeSignature = signature;
+                    data = effective;
+                    await renderVisualization(data, window.view || "timeline");
+                }
+            }
+
+            async function fetchTranscriptMeta() {
+                try {
+                    const projectId = localStorage.getItem("currentProjectId");
+                    const projectParam = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+                    const response = await fetch(`/api/processed_transcripts_meta?t=${Date.now()}${projectParam}`, { cache: "no-store" });
+                    if (!response.ok) return null;
+                    return await response.json();
+                } catch (error) {
+                    console.warn("Failed to refresh transcripts meta:", error);
+                    return null;
+                }
+            }
+
+            async function refreshTranscriptsIfChanged() {
+                if (renderInFlight) return;
+                const meta = await fetchTranscriptMeta();
+                if (!meta || !meta.exists) return;
+                const signature = JSON.stringify({
+                    mtime: meta.mtime,
+                    size: meta.size,
+                    mode: meta.mode,
+                    projectId: meta.projectId
+                });
+                if (!lastTranscriptMetaSignature) {
+                    lastTranscriptMetaSignature = signature;
+                    return;
+                }
+                if (signature !== lastTranscriptMetaSignature) {
+                    lastTranscriptMetaSignature = signature;
+                    if (typeof nonVerbalCueModule.invalidateNonVerbalCueData === "function") {
+                        nonVerbalCueModule.invalidateNonVerbalCueData();
+                    }
+                    await loadTranscripts(true);
+                    await renderVisualization(data, window.view || "timeline");
+                }
+            }
+
+            function refreshOnVisibility() {
+                refreshThemesIfChanged();
+                refreshTranscriptsIfChanged();
+            }
+
+            const autoRefreshEnabled = true;
+            if (autoRefreshEnabled) {
+                window.addEventListener("pageshow", refreshOnVisibility);
+                document.addEventListener("visibilitychange", function() {
+                    if (!document.hidden) {
+                        refreshOnVisibility();
+                    }
+                });
+            }
+
+            async function loadThemesAndRender(initialThemeObject) {
+                const latest = await fetchLatestThemes();
+                const effective = resolveThemePayload(initialThemeObject, latest);
+                if (await shouldBlankVisualizationForGeneration(effective)) {
+                    data = { themes: [] };
+                    lastThemeSignature = JSON.stringify(data || {});
+                    await renderVisualization(data, view, { blurCanvas: true });
+                    return;
+                }
+                data = effective || { themes: [] };
+                lastThemeSignature = JSON.stringify(data || {});
+                await renderVisualization(data, view, { blurCanvas: true });
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                initializeColorAdjustmentPanel();
+            const themeObject2 = {{ themeObject2 | tojson | safe }} ;
+            const initialThemePayload = resolveThemePayload(themeObject2, null);
+            console.log('Retrieved themes:', themeObject2);
+            data = initialThemePayload || { themes: [] };
+            loadThemesAndRender(initialThemePayload).catch((error) => {
+                console.error("Initial visualization render failed:", error);
+            });
+
+            const axisOffset = 0;
+            const graphContainer = document.getElementById("graph-holder");
+            if (graphContainer) {
+                graphContainer.addEventListener("scroll", function() {
+                    const scrollLeft = graphContainer.scrollLeft;
+                    d3.select(".fixedYAxisIcons")
+                        .style("z-index", 100)
+                        .attr("transform", `translate(${scrollLeft + axisOffset}, 0)`);
+                });
+            }
+
+            if (autoRefreshEnabled) {
+                setInterval(function() {
+                    refreshThemesIfChanged();
+                    refreshTranscriptsIfChanged();
+                }, REFRESH_POLL_MS);
+            }
+            d3.select("#menu-icon").on("click", function(){	
+                loadTranscripts().then(transcripts => {
+                    if (transcripts) {
+                        showMenu(transcripts,data);
+                    }
+                });
+            });
+
+            const timelineButton = document.getElementById('timeline-view');
+            const questionsButton = document.getElementById('questions-view');
+            
+
+            timelineButton.addEventListener('click', function() {
+                // --- THIS IS THE FIX ---
+                window.view = "timeline"; // Set the global view state
+                // --- END OF FIX ---
+                
+                timelineButton.classList.add('active');
+                questionsButton.classList.remove('active');
+                view = "timeline"
+                selectedParticipantObject.selectedParticipant = ""; //to avoid audio wave
+                firstClickObject.firstClick = true;
+                firstClickObject.object = "";
+                d3.select("#transcript-header .transcript-header-title").text("Transcript");
+                if (window.ChromaTranscriptViews && typeof window.ChromaTranscriptViews.hideThemeQuoteButton === "function") {
+                    window.ChromaTranscriptViews.hideThemeQuoteButton();
+                }
+                
+                renderVisualization(data, window.view, { blurCanvas: true });
+            });
+
+            questionsButton.addEventListener('click', function() {
+                // --- THIS IS THE FIX ---
+                window.view = "question"; // Set the global view state
+                // --- END OF FIX ---
+                questionsButton.classList.add('active');
+                timelineButton.classList.remove('active');
+                view = "question"
+                selectedParticipantObject.selectedParticipant = ""; //to avoid audio wave
+                firstClickObject.firstClick = true;
+                firstClickObject.object = "";
+                d3.select("#transcript-header .transcript-header-title").text("Transcript");
+                if (window.ChromaTranscriptViews && typeof window.ChromaTranscriptViews.hideThemeQuoteButton === "function") {
+                    window.ChromaTranscriptViews.hideThemeQuoteButton();
+                }
+                renderVisualization(data, window.view, { blurCanvas: true });
+            });
+        });
+        
+        
+
+        </script>
+        <style>
+            .highlight {
+                background-color: yellow;
+            }
+            .fixed-element {
+                position: fixed;
+                top: 25px;
+                z-index: 1;
+                background: #eeedef;
+                padding: 5px;
+                border-radius: 10px;
+            }
+            
+            /* Transcript styling for better text wrapping */
+            #transcript {
+                font-family: 'Inter', sans-serif;
+                line-height: 1.5;
+                color: #333;
+                scroll-padding-top: 16px;
+            }
+
+            #transcript .speech.active,
+            #transcript .speechBlock.active,
+            #transcript .speechSection.active {
+                scroll-margin-top: 16px;
+            }
+            
+            #transcript .transcript-entry {
+                margin-bottom: 15px;
+                padding: 8px;
+                border-radius: 5px;
+                background-color: #f8f9fa;
+            }
+            
+            #transcript .timestamp {
+                font-weight: 600;
+                color: #666;
+                font-size: 0.9em;
+            }
+            
+            #transcript .speaker {
+                font-weight: 600;
+                color: #007bff;
+                margin-left: 10px;
+            }
+            
+            #transcript .dialogue {
+                margin-top: 5px;
+                text-align: justify;
+                hyphens: auto;
+            }
+            
+            #transcript .progress-bar {
+                margin-top: 5px;
+                height: 4px;
+                background-color: #e9ecef;
+                border-radius: 2px;
+                overflow: hidden;
+            }
+            
+            #transcript .progress-fill {
+                height: 100%;
+                background-color: #28a745;
+                transition: width 0.3s ease;
+            }
+            /* --- ADD THE NEW CSS RULE HERE --- */
+            #vis-holder.shifted {
+                position: absolute;
+                left: 12%; 
+                width: auto;
+                top: 0;
+                bottom: 0;
+                right: 0;
+            /* --- END OF NEW RULE --- */
+            }
+        </style>
+        
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    </body>
+</html>

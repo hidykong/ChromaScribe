@@ -1,0 +1,436 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/d3@4.13.0/build/d3.min.js"></script>
+    <link rel="stylesheet" href="../static/styles.css?v=20260531d">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&family=Nunito:wght@600&display=swap" rel="stylesheet">
+    <title>Theme Editing</title>
+    <style>
+        
+        #theme-generation-status,
+        #theme-loading-status {
+            position: fixed;
+            right: 32px;
+            bottom: 84px;
+            z-index: 100;
+            max-width: 680px;
+            width: calc(84vw - 64px);
+            padding: 12px 16px;
+            border: 1px solid #f0b3b3;
+            border-radius: 8px;
+            background: #fff2f2;
+            color: #7d1b1b;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        #theme-loading-status {
+            background: #f0f6ff;
+            border-color: #bfdbfe;
+            color: #1e3a8a;
+        }
+
+        #theme-loading-status[data-state="error"] {
+            background: #fff8ed;
+            border-color: #f4d49b;
+            color: #854d0e;
+        }
+
+        #main-edit-window[hidden] { display: none !important; }
+        #theme-loading-status[data-view="page"] {
+            top: 28%;
+            bottom: auto;
+            left: 58%;
+            right: auto;
+            transform: translateX(-50%);
+            padding: 32px;
+            text-align: center;
+        }
+        #theme-loading-status[data-view="page"] #theme-loading-title {
+            display: block;
+            margin-top: 16px;
+            font-size: 24px;
+        }
+        #theme-loading-status[data-view="page"] #theme-loading-message {
+            margin-top: 12px;
+            font-size: 16px;
+        }
+        #theme-loading-status[data-view="page"] #theme-loading-spinner {
+            width: 28px;
+            height: 28px;
+            margin-right: 0;
+        }
+
+        #theme-loading-title { font-weight: 700; }
+        #theme-loading-message { margin-top: 4px; }
+        #theme-loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            margin-right: 8px;
+            border: 2px solid #bfdbfe;
+            border-top-color: #3a61dd;
+            border-radius: 50%;
+            vertical-align: middle;
+            animation: theme-loading-spin 1s linear infinite;
+        }
+        #theme-loading-spinner[hidden] { display: none; }
+        @keyframes theme-loading-spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) {
+            #theme-loading-spinner { animation: none; }
+        }
+
+        #main-edit-window {
+            display: flex;
+            flex-direction: column;
+            position: absolute; /* Use absolute positioning */
+            right: 100; /* Align the div to the right of the screen */
+            top: 0; /* Adjust as needed */
+            height: 100vh; /* Optional: makes it full height */
+        }
+    </style>
+</head>
+<body class="container-fluid" style="padding-left: 0; padding-right: 0; margin-left: 0; background: #E5E5E5; 
+font-family: Nunito; font-size: 16px;">
+    <div id="settings-page" style="display: flex; height: 100%; width: 100%;">
+        <div id="editing" class="sections" style="position: absolute; z-index: 2; left: 0px; right: 0px; 
+        top: 0px; bottom: 0px; display: flex; flex-direction: row;">
+            <div id="settingsTabs" style="background: #ffffff; box-shadow: 0px 4px 4px 4px rgba(0, 48, 83, 0.25); 
+            height: 100%; width: 16%; overflow: auto;"></div>
+            <div id="main-edit-window" hidden aria-busy="true" style="right: 22px; height: 100%; width: 84%; display: flex; flex-direction: column;
+            align-items: center; overflow: auto;"></div>
+            <div id="theme-loading-status" data-view="page" role="status" aria-live="polite" aria-atomic="true">
+                <span id="theme-loading-spinner" aria-hidden="true"></span>
+                <span id="theme-loading-title">Loading codes…</span>
+                <div id="theme-loading-message">Checking your saved work and AI generation progress.</div>
+            </div>
+            <div id="theme-generation-status" role="alert" aria-atomic="true" hidden>
+                <span id="theme-generation-status-message"></span>
+                <span>Saved codes are unchanged.</span>
+                <a href="/llm-setup" target="_blank" rel="noopener">API Key Setup</a>
+            </div>
+        </div>
+    </div>
+        <script type="module" src="/static/Pages/projectProgressSync.js?v=20260823a" defer></script>
+    <script src="https://unpkg.com/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.js"></script>
+    <script type="module">
+        import { showSettings } from '../static/Pages/settings-page/menupanel.js?v=20260901a';
+        import { startDemoThemeEditing } from '../static/Pages/settings-page/themes/demoGenerateThemes.js?v=20261024a';
+        import { startThemeEditing } from '../static/Pages/settings-page/themes/startThemeEditing.js?v=20261025a';
+        import { isThemeGenerationRunning, updateThemeGenerationStatus, updateThemeLoadingStatus } from '../static/Pages/themeGenerationStatus.js?v=20261025a';
+        import { shouldOpenSavedThemeCodeManager, themePayloadHasManualContent } from '../static/Pages/themePersistence.js?v=20260901b';
+        window.APP_MODE = '{{ mode }}';
+        window.CURRENT_PROJECT_ID = '{{ session.get("current_project_id", "") }}';
+        window.USER_WORKSPACE_KEY = '{{ session.get("user_workspace_key", "") }}';
+        try {
+            if (window.USER_WORKSPACE_KEY) localStorage.setItem("currentWorkspaceKey", window.USER_WORKSPACE_KEY);
+            if (window.CURRENT_PROJECT_ID) localStorage.setItem("currentProjectId", window.CURRENT_PROJECT_ID);
+        } catch (error) {
+            console.warn("Could not sync project context:", error);
+        }
+        
+        showSettings();
+        d3.select("#themes-tab").select("div").style("background", "#3A61DD1F").select("img")
+            .attr("src", "/static/images/Enable_Themes.png");
+
+        let lastThemeSignature = "";
+        let themeRefreshTimer = null;
+        let themeRefreshInFlight = false;
+        let hasRenderedThemePage = false;
+        let waitingForCodeSelection = true;
+        let latestGenerationProgress = null;
+        let themeGenerationVersion = 0;
+        let themeRefreshRequested = false;
+
+        async function renderThemePage(renderPage, themes) {
+            const rendered = await renderPage(themes);
+            if (rendered === false) throw new Error("Could not load saved code selection.");
+            if (rendered === "waiting") {
+                lastThemeSignature = "";
+                setThemeRefreshPolling(true);
+                return false;
+            }
+            hasRenderedThemePage = true;
+            waitingForCodeSelection = false;
+            return true;
+        }
+
+        function getCurrentProjectId() {
+            return window.CURRENT_PROJECT_ID || localStorage.getItem("currentProjectId") || "";
+        }
+
+        function getCurrentWorkspaceKey() {
+            return window.USER_WORKSPACE_KEY || localStorage.getItem("currentWorkspaceKey") || "";
+        }
+
+        function getProjectStorageScope() {
+            const projectId = getCurrentProjectId();
+            if (!projectId) return "";
+            const workspaceKey = getCurrentWorkspaceKey();
+            return workspaceKey ? `${workspaceKey}__${projectId}` : projectId;
+        }
+
+        function getSelectionCompleteKey() {
+            const storageScope = getProjectStorageScope();
+            return storageScope ? `themeSelectionComplete_${storageScope}` : "themeSelectionComplete";
+        }
+
+        function getGeneratedThemesKey() {
+            const storageScope = getProjectStorageScope();
+            return storageScope ? `generatedPossibleThemes_${storageScope}` : "generatedPossibleThemes";
+        }
+
+        function getSelectionPendingKey() {
+            const storageScope = getProjectStorageScope();
+            return storageScope ? `themeSelectionPending_${storageScope}` : "themeSelectionPending";
+        }
+
+        function hasGeneratedThemeCandidates() {
+            try {
+                const rawValue = localStorage.getItem(getGeneratedThemesKey());
+                if (!rawValue) return false;
+                const parsed = JSON.parse(rawValue);
+                return Array.isArray(parsed) && parsed.length > 0;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function persistProgressThemes(progress) {
+            const themes = Array.isArray(progress && progress.themes) ? progress.themes : [];
+            if (themes.length === 0) return;
+            try {
+                localStorage.setItem(getGeneratedThemesKey(), JSON.stringify(themes));
+                if (!getCurrentProjectId() && !getCurrentWorkspaceKey()) {
+                    localStorage.setItem("generatedPossibleThemes", JSON.stringify(themes));
+                }
+            } catch (error) {
+                console.warn("Could not cache generated theme candidates:", error);
+            }
+        }
+
+        function hasThemes(themePayload) {
+            return (
+                themePayload &&
+                Array.isArray(themePayload.themes) &&
+                themePayload.themes.length > 0
+            );
+        }
+
+        async function fetchGenerationProgress() {
+            if (window.APP_MODE === "demo") return null;
+            try {
+                const projectId = getCurrentProjectId();
+                const projectParam = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+                const response = await fetch(`/progress?t=${Date.now()}${projectParam}`, { cache: "no-store", signal: AbortSignal.timeout(15000) });
+                if (!response.ok) return null;
+                return await response.json();
+            } catch (error) {
+                console.warn("Could not refresh generation progress:", error);
+                return null;
+            }
+        }
+
+        function setThemeRefreshPolling(active) {
+            if (active && !themeRefreshTimer) {
+                themeRefreshTimer = setInterval(fetchThemes, 5000);
+            } else if (!active && themeRefreshTimer) {
+                clearInterval(themeRefreshTimer);
+                themeRefreshTimer = null;
+            }
+        }
+
+        async function fetchThemes() {
+            // A slow earlier refresh must not replace newer results or reset code selections.
+            if (themeRefreshInFlight) return;
+            themeRefreshInFlight = true;
+            themeRefreshRequested = false;
+            const generationVersion = themeGenerationVersion;
+            let refreshFailed = false;
+            try {
+                const progressResponse = await fetchGenerationProgress();
+                if (generationVersion !== themeGenerationVersion) return;
+                if (progressResponse) latestGenerationProgress = progressResponse;
+                const progress = latestGenerationProgress;
+                updateThemeGenerationStatus(progress);
+                updateThemeLoadingStatus({ progress, loading: !hasRenderedThemePage, waiting: waitingForCodeSelection });
+                const projectId = getCurrentProjectId();
+                const projectParam = projectId ? `&projectId=${encodeURIComponent(projectId)}` : "";
+                const themeResponse = await fetch(`/api/themes?t=${Date.now()}${projectParam}`, { cache: "no-store", signal: AbortSignal.timeout(15000) });
+                if (!themeResponse.ok) throw new Error("Could not load codes.");
+                const themeObject = await themeResponse.json();
+                const generationRunning = isThemeGenerationRunning(progress);
+                if (generationRunning) {
+                    // Remember a running job even after reloading this page.
+                    localStorage.setItem(getSelectionPendingKey(), "1");
+                }
+                const progressHasThemes = Array.isArray(progress && progress.themes) && progress.themes.length > 0;
+                const generatedCandidatesPending = hasGeneratedThemeCandidates();
+                const selectionPending = localStorage.getItem(getSelectionPendingKey()) === "1" || generatedCandidatesPending;
+                const selectionComplete = localStorage.getItem(getSelectionCompleteKey()) === "1" && !selectionPending;
+                if (selectionPending) {
+                    localStorage.removeItem(getSelectionCompleteKey());
+                }
+
+                let selectedThemeObject = null;
+                try {
+                    const selectedResponse = await fetch(`/api/load_selected_themes?displayOnly=1&includeUnselectedManual=1&includeGeneratedQuotes=1&includeGeneratedThemes=1&t=${Date.now()}${projectParam}`, { cache: "no-store", signal: AbortSignal.timeout(15000) });
+                    if (selectedResponse.ok) {
+                        selectedThemeObject = await selectedResponse.json();
+                    }
+                } catch (selectedError) {
+                    console.warn("Failed to refresh selected themes:", selectedError);
+                }
+
+                // A new generation invalidates results fetched before it started.
+                if (generationVersion !== themeGenerationVersion) return;
+                const openSavedCodeManager = shouldOpenSavedThemeCodeManager(
+                    window.APP_MODE,
+                    selectionComplete,
+                    selectedThemeObject
+                );
+                const hasSavedManualContent = themePayloadHasManualContent(selectedThemeObject);
+                const effectiveThemeObject = openSavedCodeManager
+                    ? selectedThemeObject
+                    : themeObject;
+                const generationFailed = Number(progress && progress.stage) < 0;
+                if (!selectedThemeObject) {
+                    // Do not replace saved work with an empty table when a read fails.
+                    refreshFailed = true;
+                    setThemeRefreshPolling(true);
+                    return;
+                }
+                const signature = JSON.stringify({
+                    themes: effectiveThemeObject || {},
+                    selectedThemes: selectedThemeObject,
+                    progressStage: progress && progress.stage,
+                    progressMessage: progress && progress.message,
+                    progressThemeCount: progressHasThemes ? progress.themes.length : 0,
+                    generationRunning,
+                    selectionPending,
+                    generatedCandidatesPending
+                });
+                if (signature === lastThemeSignature) return;
+                lastThemeSignature = signature;
+
+                if (generationFailed) {
+                    setThemeRefreshPolling(true);
+                    await renderThemePage(startDemoThemeEditing, selectedThemeObject);
+                    return;
+                }
+
+                const waitingForFirstCodes = !hasThemes(selectedThemeObject)
+                    && (generationRunning || (selectionPending && !progress));
+                if (window.APP_MODE !== "demo" && waitingForFirstCodes) {
+                    waitingForCodeSelection = true;
+                    setThemeRefreshPolling(true);
+                    return;
+                }
+
+                if (window.APP_MODE !== "demo" && !selectionComplete && !generationRunning) {
+                    localStorage.removeItem(getSelectionCompleteKey());
+                }
+
+                const freshCandidatesReady = selectionPending && !generationRunning
+                    && (progressHasThemes || generatedCandidatesPending);
+                if (window.APP_MODE !== "demo" && freshCandidatesReady) {
+                    persistProgressThemes(progress);
+                    waitingForCodeSelection = !hasThemes(selectedThemeObject);
+                    updateThemeLoadingStatus({ progress, loading: true, waiting: waitingForCodeSelection });
+                    const selectionReady = await renderThemePage(startThemeEditing, { waitForGeneration: true });
+                    if (!selectionReady) return;
+                    setThemeRefreshPolling(false);
+                    return;
+                }
+
+                if (openSavedCodeManager && (window.APP_MODE === "demo" || hasSavedManualContent)) {
+                    localStorage.setItem(getSelectionCompleteKey(), "1");
+                    setThemeRefreshPolling(true);
+                    await renderThemePage(startDemoThemeEditing, selectedThemeObject);
+                    return;
+                }
+
+                if (generationRunning) {
+                    setThemeRefreshPolling(true);
+                    await renderThemePage(startDemoThemeEditing, selectedThemeObject);
+                    return;
+                }
+
+                if (openSavedCodeManager) {
+                    localStorage.setItem(getSelectionCompleteKey(), "1");
+                    setThemeRefreshPolling(window.APP_MODE === "demo");
+                    await renderThemePage(startDemoThemeEditing, selectedThemeObject);
+                    return;
+                }
+
+                if (hasThemes(effectiveThemeObject) || progressHasThemes) {
+                    persistProgressThemes(progress);
+                    waitingForCodeSelection = !hasThemes(selectedThemeObject);
+                    updateThemeLoadingStatus({ progress, loading: true, waiting: waitingForCodeSelection });
+                    const selectionReady = await renderThemePage(startThemeEditing, { waitForGeneration: true });
+                    if (!selectionReady) return;
+                    setThemeRefreshPolling(window.APP_MODE === "demo");
+                    return;
+                }
+
+                // No saved themes yet: keep Code Manager available for manual coding.
+                setThemeRefreshPolling(true);
+                await renderThemePage(startDemoThemeEditing, { themes: [] });
+            } catch (error) {
+                refreshFailed = true;
+                lastThemeSignature = "";
+                setThemeRefreshPolling(true);
+                console.warn("Failed to refresh themes:", error);
+            } finally {
+                themeRefreshInFlight = false;
+                updateThemeLoadingStatus({
+                    progress: latestGenerationProgress,
+                    failed: refreshFailed,
+                    waiting: waitingForCodeSelection
+                });
+                if (themeRefreshRequested) void fetchThemes();
+            }
+        }
+
+        function handleThemeGenerationStarted() {
+            themeGenerationVersion += 1;
+            themeRefreshRequested = true;
+            lastThemeSignature = "";
+            latestGenerationProgress = { stage: 0, message: "Starting" };
+            updateThemeGenerationStatus(latestGenerationProgress);
+            updateThemeLoadingStatus({ progress: latestGenerationProgress, waiting: waitingForCodeSelection });
+            localStorage.setItem(getSelectionPendingKey(), "1");
+            localStorage.removeItem(getGeneratedThemesKey());
+            setThemeRefreshPolling(true);
+            void fetchThemes();
+        }
+
+        // Initial load
+        fetchThemes();
+        setThemeRefreshPolling(true);
+        window.addEventListener("themes:generation-started", handleThemeGenerationStarted);
+        window.addEventListener("filemap:updated", function() {
+            fetchThemes();
+        });
+        window.addEventListener("storage", function(event) {
+            if (!event || !event.key) return;
+            if (!event.key.includes("FileMap_MatchedData") && !event.key.startsWith("data.json")) return;
+            fetchThemes();
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+
+</body>
+</html>

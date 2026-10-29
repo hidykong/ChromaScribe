@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3A61DD" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#8E41D1" stop-opacity="0.14"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3A61DD" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#8EC053" stop-opacity="0.35"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="400" fill="#F7F8FF"/>
+  <rect width="800" height="400" fill="url(#bg)"/>
+
+  <circle cx="130" cy="110" r="120" fill="#E7A23B" opacity="0.12"/>
+  <circle cx="680" cy="90" r="150" fill="#3A61DD" opacity="0.14"/>
+  <circle cx="520" cy="320" r="190" fill="#8E41D1" opacity="0.10"/>
+
+  <path d="M0 260 C 160 220, 280 320, 420 280 C 560 240, 660 300, 800 260 L800 400 L0 400 Z" fill="url(#wave)" opacity="0.18"/>
+  <path d="M0 250 C 170 210, 290 310, 430 270 C 570 230, 670 290, 800 250" fill="none" stroke="#3A61DD" stroke-opacity="0.25" stroke-width="4"/>
+  <path d="M0 280 C 170 240, 300 340, 430 300 C 560 260, 670 330, 800 280" fill="none" stroke="#8EC053" stroke-opacity="0.22" stroke-width="4"/>
+</svg>

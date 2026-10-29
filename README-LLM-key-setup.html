@@ -1,0 +1,1244 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>API Key Setup | ChromaScribe</title>
+        <style>
+            :root {
+                color-scheme: light;
+                --ink: #243044;
+                --muted: #526078;
+                --blue: #3159ce;
+                --pale-blue: #edf2ff;
+                --line: #dce3ee;
+                --canvas: #f5f7fb;
+                --paper: #ffffff;
+                --code: #19273e;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            html {
+                scroll-padding-top: 28px;
+            }
+            body {
+                margin: 0;
+                color: var(--ink);
+                background: var(--canvas);
+                font:
+                    17px/1.65 -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+            }
+            a {
+                color: var(--blue);
+                text-underline-offset: 3px;
+            }
+            a:hover {
+                text-decoration-thickness: 2px;
+            }
+            button,
+            summary {
+                cursor: pointer;
+            }
+            a:focus-visible,
+            button:focus-visible,
+            summary:focus-visible {
+                outline: 3px solid var(--blue);
+                outline-offset: 4px;
+            }
+            .skip-link {
+                position: absolute;
+                left: 16px;
+                top: -70px;
+            }
+            .skip-link:focus {
+                top: 12px;
+                background: white;
+                padding: 8px;
+                z-index: 3;
+            }
+            .topbar {
+                background: var(--paper);
+                border-bottom: 1px solid var(--line);
+            }
+            .topbar-inner {
+                max-width: 1180px;
+                margin: auto;
+                padding: 20px 28px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 20px;
+            }
+            .brand {
+                color: var(--ink);
+                font-size: 23px;
+                font-weight: 750;
+                text-decoration: none;
+            }
+            .back-link {
+                font-size: 15px;
+                font-weight: 600;
+            }
+            .page {
+                max-width: 1180px;
+                margin: auto;
+                padding: 44px 28px 80px;
+                display: grid;
+                grid-template-columns: 210px minmax(0, 1fr);
+                gap: 52px;
+            }
+            .sidebar {
+                position: sticky;
+                top: 28px;
+                align-self: start;
+            }
+            .sidebar h2 {
+                margin: 0 0 16px;
+                font-size: 16px;
+            }
+            .sidebar ol {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+            .sidebar li + li {
+                margin-top: 8px;
+            }
+            .sidebar a {
+                display: flex;
+                gap: 10px;
+                align-items: baseline;
+                padding: 8px 0;
+                color: var(--muted);
+                text-decoration: none;
+                font-size: 15px;
+            }
+            .sidebar a:hover {
+                color: var(--blue);
+            }
+            .sidebar .number {
+                color: var(--blue);
+                font-weight: 700;
+            }
+            .sidebar-note {
+                border-top: 1px solid var(--line);
+                margin-top: 24px;
+                padding-top: 20px;
+                font-size: 14px;
+                color: var(--muted);
+            }
+            main {
+                min-width: 0;
+            }
+            h1 {
+                font-size: clamp(32px, 4vw, 44px);
+                line-height: 1.15;
+                letter-spacing: -1px;
+                margin: 0 0 18px;
+            }
+            h2 {
+                font-size: 25px;
+                line-height: 1.3;
+                margin: 0 0 12px;
+            }
+            h3 {
+                font-size: 19px;
+                line-height: 1.4;
+                margin: 24px 0 10px;
+            }
+            p {
+                margin: 0 0 16px;
+                max-width: 68ch;
+            }
+            .intro {
+                margin-bottom: 32px;
+            }
+            .intro p {
+                color: var(--muted);
+                font-size: 19px;
+            }
+            .prerequisite {
+                font-size: 15px !important;
+                margin-top: 20px;
+            }
+            .step {
+                background: var(--paper);
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                padding: 30px 32px;
+                margin-bottom: 24px;
+            }
+            .step-heading {
+                display: flex;
+                gap: 14px;
+                align-items: flex-start;
+                margin-bottom: 10px;
+            }
+            .step-number {
+                display: grid;
+                place-items: center;
+                width: 32px;
+                height: 32px;
+                flex: none;
+                border-radius: 50%;
+                background: var(--pale-blue);
+                color: var(--blue);
+                font-weight: 700;
+                font-size: 16px;
+            }
+            .step-heading h2 {
+                padding-top: 1px;
+            }
+            .helper {
+                font-size: 15px;
+                color: var(--muted);
+            }
+            .notice {
+                border-left: 3px solid var(--blue);
+                background: var(--pale-blue);
+                padding: 16px 18px;
+                margin: 22px 0;
+                font-size: 15px;
+            }
+            .notice p:last-child {
+                margin-bottom: 0;
+            }
+            .notice strong {
+                display: block;
+                margin-bottom: 5px;
+            }
+            details {
+                border-top: 1px solid var(--line);
+            }
+            details:last-child {
+                border-bottom: 1px solid var(--line);
+            }
+            summary {
+                padding: 16px 2px;
+                font-size: 16px;
+                font-weight: 650;
+            }
+            summary::marker {
+                color: var(--blue);
+            }
+            .detail-body {
+                padding: 0 4px 18px 22px;
+            }
+            .detail-body p:last-child {
+                margin-bottom: 0;
+            }
+            .provider-links {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px 22px;
+                margin: 10px 0;
+                font-size: 15px;
+            }
+            .provider-address {
+                display: block;
+                color: var(--muted);
+                overflow-wrap: anywhere;
+                font-size: 14px;
+            }
+            code {
+                font:
+                    0.88em/1.6 "SFMono-Regular",
+                    Consolas,
+                    "Liberation Mono",
+                    monospace;
+            }
+            p code,
+            li code,
+            dd code {
+                background: var(--pale-blue);
+                padding: 2px 5px;
+                border-radius: 4px;
+                overflow-wrap: anywhere;
+            }
+            .code-block {
+                background: var(--code);
+                color: #f1f5ff;
+                border-radius: 8px;
+                margin: 16px 0;
+                overflow: hidden;
+            }
+            .code-header {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                align-items: center;
+                padding: 10px 14px;
+                border-bottom: 1px solid #3b4861;
+            }
+            .code-label {
+                font-size: 13px;
+                color: #d0dcf2;
+            }
+            .copy {
+                border: 1px solid #65748f;
+                border-radius: 5px;
+                background: transparent;
+                color: white;
+                padding: 5px 12px;
+                font: inherit;
+                font-size: 13px;
+            }
+            .copy:hover {
+                background: #344563;
+            }
+            pre {
+                margin: 0;
+                padding: 18px;
+                overflow-x: auto;
+                font-size: 14px;
+                line-height: 1.7;
+            }
+            .placeholder {
+                color: #ffdb91;
+            }
+            .settings {
+                margin: 20px 0;
+            }
+            .settings > div {
+                display: grid;
+                grid-template-columns: 165px minmax(0, 1fr);
+                gap: 12px;
+                padding: 7px 0;
+            }
+            dt {
+                font-weight: 650;
+                font-size: 14px;
+            }
+            dd {
+                margin: 0;
+                font-size: 15px;
+                color: var(--muted);
+            }
+            .os-switch {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+                margin: 18px 0 8px;
+            }
+            .os-switch button {
+                font: inherit;
+                font-size: 14px;
+                padding: 8px 14px;
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                background: white;
+                color: var(--muted);
+            }
+            .os-switch button[aria-pressed="true"] {
+                border-color: var(--blue);
+                color: var(--blue);
+                background: var(--pale-blue);
+            }
+            [hidden] {
+                display: none !important;
+            }
+            .checklist {
+                padding-left: 22px;
+            }
+            .checklist li {
+                padding-left: 3px;
+                margin: 8px 0;
+            }
+            .open-app {
+                display: inline-block;
+                background: var(--blue);
+                color: white;
+                padding: 10px 18px;
+                border-radius: 6px;
+                text-decoration: none;
+                font-weight: 600;
+                margin-top: 4px;
+            }
+            .support {
+                margin-top: 38px;
+            }
+            footer {
+                border-top: 1px solid var(--line);
+                padding-top: 24px;
+                margin-top: 36px;
+                color: var(--muted);
+                font-size: 14px;
+            }
+            @media (max-width: 850px) {
+                .page {
+                    grid-template-columns: minmax(0, 1fr);
+                    gap: 28px;
+                    padding-top: 28px;
+                }
+                .sidebar {
+                    position: static;
+                }
+                .sidebar ol {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 0 22px;
+                }
+                .sidebar li + li {
+                    margin: 0;
+                }
+                .sidebar h2,
+                .sidebar-note {
+                    display: none;
+                }
+            }
+            @media (max-width: 540px) {
+                body {
+                    font-size: 16px;
+                }
+                .page {
+                    padding: 22px 16px 48px;
+                }
+                .topbar-inner {
+                    padding: 16px;
+                }
+                .brand {
+                    font-size: 21px;
+                }
+                .step {
+                    padding: 23px 18px;
+                }
+                .settings > div {
+                    grid-template-columns: 1fr;
+                    gap: 2px;
+                }
+                .detail-body {
+                    padding-left: 4px;
+                }
+                h2 {
+                    font-size: 22px;
+                }
+            }
+            @media (prefers-reduced-motion: no-preference) {
+                html {
+                    scroll-behavior: smooth;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <a class="skip-link" href="#main">Skip to setup guide</a>
+        <header class="topbar">
+            <div class="topbar-inner">
+                <a class="brand" href="/">ChromaScribe</a>
+                <a class="back-link" href="/">Back to projects</a>
+            </div>
+        </header>
+        <div class="page">
+            <nav class="sidebar" aria-label="Setup guide">
+                <h2>In this guide</h2>
+                <ol>
+                    <li>
+                        <a href="#provider"
+                            ><span class="number">1</span> Choose your AI
+                            provider</a
+                        >
+                    </li>
+                    <li>
+                        <a href="#env"
+                            ><span class="number">2</span> Save your settings</a
+                        >
+                    </li>
+                    <li>
+                        <a href="#verify"
+                            ><span class="number">3</span> Start and test</a
+                        >
+                    </li>
+                    <li><a href="#trouble">Troubleshooting</a></li>
+                </ol>
+                <p class="sidebar-note">
+                    Your API key belongs in your local <code>.env</code> file.
+                    This guide never asks you to enter it in the browser.
+                </p>
+            </nav>
+            <main id="main">
+                <header class="intro">
+                    <h1>Set up AI for your research</h1>
+                    <p>
+                        Connect an AI provider to suggest Q&amp;A tags, codes,
+                        and related excerpts. Use your own API key, or run a
+                        model on your computer with Ollama.
+                    </p>
+                    <p class="prerequisite">
+                        New to ChromaScribe?
+                        <a
+                            href="https://github.com/hidykong/ChromaScribe#readme"
+                            target="_blank"
+                            rel="noopener"
+                            >Install the app first</a
+                        >, then return here. ChromaScribe itself needs no
+                        account or Firebase setup.
+                    </p>
+                </header>
+
+                <section
+                    class="step"
+                    id="provider"
+                    aria-labelledby="provider-title"
+                >
+                    <div class="step-heading">
+                        <span class="step-number" aria-hidden="true">1</span>
+                        <h2 id="provider-title">Choose your AI provider</h2>
+                    </div>
+                    <p>
+                        For hosted AI, create a key with your provider and
+                        choose a text chat model available to your account. Keep
+                        the exact model ID handy; you’ll need it in step 2.
+                    </p>
+                    <div class="notice">
+                        <strong>Before using participant data</strong>
+                        <p>
+                            A hosted provider receives the transcript content
+                            sent for AI processing. Check its data policy and
+                            your study’s requirements first. A downloaded model
+                            running through local Ollama processes that content
+                            on your computer.
+                        </p>
+                    </div>
+                    <details open>
+                        <summary>Google AI Studio</summary>
+                        <div class="detail-body">
+                            <p>
+                                Create an API key in AI Studio, then choose an
+                                available Gemini text chat model. We use Google
+                                for the example below.
+                            </p>
+                            <div class="provider-links">
+                                <a
+                                    href="https://aistudio.google.com/apikey"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Get a Google API key</a
+                                ><a
+                                    href="https://ai.google.dev/gemini-api/docs/openai"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Model and API guide</a
+                                >
+                            </div>
+                            <code class="provider-address"
+                                >https://generativelanguage.googleapis.com/v1beta/openai</code
+                            >
+                        </div>
+                    </details>
+                    <details>
+                        <summary>Groq</summary>
+                        <div class="detail-body">
+                            <p>
+                                Create a Groq key for your own account. The
+                                <a href="#groq-settings">Groq settings below</a>
+                                use <code>openai/gpt-oss-20b</code>, which supports
+                                structured responses for code generation.
+                                Check that your account can use this model.
+                            </p>
+                            <div class="provider-links">
+                                <a
+                                    href="https://console.groq.com/keys"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Get a Groq API key</a
+                                ><a
+                                    href="https://console.groq.com/docs/models"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Model list</a
+                                ><a
+                                    href="https://console.groq.com/docs/openai"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >API guide</a
+                                >
+                            </div>
+                            <code class="provider-address"
+                                >https://api.groq.com/openai/v1</code
+                            >
+                        </div>
+                    </details>
+                    <details>
+                        <summary>OpenRouter</summary>
+                        <div class="detail-body">
+                            <p>
+                                Create an OpenRouter key and choose a text chat
+                                model. Copy the full model ID, including the
+                                organization prefix.
+                            </p>
+                            <div class="provider-links">
+                                <a
+                                    href="https://openrouter.ai/keys"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Get an OpenRouter API key</a
+                                ><a
+                                    href="https://openrouter.ai/models"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Model list</a
+                                ><a
+                                    href="https://openrouter.ai/docs/api_reference/overview"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >API guide</a
+                                >
+                            </div>
+                            <code class="provider-address"
+                                >https://openrouter.ai/api/v1</code
+                            >
+                        </div>
+                    </details>
+                    <details>
+                        <summary>OpenAI</summary>
+                        <div class="detail-body">
+                            <p>
+                                Create an API key and choose a model that
+                                supports Chat Completions. Check your account’s
+                                model access and API billing.
+                            </p>
+                            <div class="provider-links">
+                                <a
+                                    href="https://platform.openai.com/api-keys"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Get an OpenAI API key</a
+                                ><a
+                                    href="https://platform.openai.com/docs/api-reference/chat/create"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Chat Completions guide</a
+                                >
+                            </div>
+                            <code class="provider-address"
+                                >https://api.openai.com/v1</code
+                            >
+                        </div>
+                    </details>
+                    <details id="local-model">
+                        <summary>Ollama on your computer — no API key</summary>
+                        <div class="detail-body">
+                            <p>
+                                <a
+                                    href="https://ollama.com/download"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Install and start Ollama</a
+                                >, then download the model used in
+                                ChromaScribe’s template:
+                            </p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-label"
+                                        >Terminal or PowerShell</span
+                                    ><button class="copy" type="button">
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>ollama pull qwen3:latest</code></pre>
+                            </div>
+                            <p>
+                                Keep Ollama running while you use AI features.
+                                Model size and speed depend on your computer.
+                                <a
+                                    href="https://ollama.com/library/qwen3"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >See available model sizes</a
+                                >.
+                            </p>
+                            <p class="helper">
+                                Use <code>ollama list</code> to see downloaded
+                                models. The
+                                <a
+                                    href="https://docs.ollama.com/api/openai-compatibility"
+                                    target="_blank"
+                                    rel="noopener"
+                                    >Ollama API guide</a
+                                >
+                                explains its local endpoint.
+                            </p>
+                        </div>
+                    </details>
+                    <p class="helper" style="margin-top: 18px">
+                        Model names, access, and usage limits can change. Choose
+                        a text chat model, rather than one intended only for
+                        audio, images, or embeddings.
+                    </p>
+                </section>
+
+                <section class="step" id="env" aria-labelledby="env-title">
+                    <div class="step-heading">
+                        <span class="step-number" aria-hidden="true">2</span>
+                        <h2 id="env-title">
+                            Save your settings in <code>.env</code>
+                        </h2>
+                    </div>
+                    <p>
+                        <code>.env</code> is a settings file in your
+                        ChromaScribe folder, next to <code>app.py</code>. Open a
+                        terminal in that folder. If the file already exists,
+                        keep it and edit it.
+                    </p>
+                    <div
+                        class="os-switch"
+                        role="group"
+                        aria-label="Show commands for your computer"
+                    >
+                        <button
+                            type="button"
+                            data-set-os="mac"
+                            aria-pressed="true"
+                        >
+                            macOS / Linux
+                        </button>
+                        <button
+                            type="button"
+                            data-set-os="win"
+                            aria-pressed="false"
+                        >
+                            Windows PowerShell
+                        </button>
+                    </div>
+                    <p class="helper">
+                        These commands create the file only if it is missing.
+                    </p>
+                    <div class="code-block" data-only="mac">
+                        <div class="code-header">
+                            <span class="code-label"
+                                >macOS / Linux terminal</span
+                            ><button class="copy" type="button">Copy</button>
+                        </div>
+                        <pre><code>if [ ! -f .env ]; then
+    cp .env.template .env
+fi</code></pre>
+                    </div>
+                    <div class="code-block" data-only="win">
+                        <div class="code-header">
+                            <span class="code-label">Windows PowerShell</span
+                            ><button class="copy" type="button">Copy</button>
+                        </div>
+                        <pre><code>if (-not (Test-Path .env)) {
+    Copy-Item .env.template .env
+}</code></pre>
+                    </div>
+                    <p>
+                        Open <code>.env</code> in a text editor. Replace the
+                        three existing <code>LLM_*</code> lines with your
+                        provider’s settings; don’t add a second copy of them.
+                    </p>
+                    <dl class="settings">
+                        <div>
+                            <dt><code>LLM_BASE_URL</code></dt>
+                            <dd>
+                                Your provider’s API address, listed in step 1.
+                            </dd>
+                        </div>
+                        <div>
+                            <dt><code>LLM_MODEL</code></dt>
+                            <dd>The exact model ID from that provider.</dd>
+                        </div>
+                        <div>
+                            <dt><code>LLM_API_KEY</code></dt>
+                            <dd>
+                                Your own key. Leave it empty for local Ollama.
+                            </dd>
+                        </div>
+                    </dl>
+                    <h3>Example: Google AI Studio</h3>
+                    <p class="helper">
+                        Replace both highlighted placeholders. For another
+                        hosted provider, also replace the API address.
+                    </p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label"
+                                >Edit these lines in .env</span
+                            ><button class="copy" type="button">Copy</button>
+                        </div>
+                        <pre><code>LLM_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai
+LLM_MODEL=<span class="placeholder">your_available_gemini_model_id</span>
+LLM_API_KEY=<span class="placeholder">your_own_api_key</span></code></pre>
+                    </div>
+                    <details id="groq-settings">
+                        <summary>Example: Groq</summary>
+                        <div class="detail-body">
+                            <p>
+                                Replace the three AI settings with these lines,
+                                then replace the key placeholder with your own
+                                Groq key.
+                            </p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-label">.env for Groq</span>
+                                    <button class="copy" type="button">Copy</button>
+                                </div>
+                                <pre><code>LLM_BASE_URL=https://api.groq.com/openai/v1
+LLM_MODEL=openai/gpt-oss-20b
+LLM_API_KEY=<span class="placeholder">your_own_groq_key</span></code></pre>
+                            </div>
+                            <p>
+                                ChromaScribe asks this model for a structured
+                                code response. See
+                                <a href="https://console.groq.com/docs/structured-outputs"
+                                    target="_blank" rel="noopener">Groq’s structured-output guide</a>.
+                                The app detects Groq from the API address above;
+                                <code>LLM_PROVIDER</code> is not needed. Remove
+                                an old override to keep your settings clear.
+                                If you use a custom proxy that forwards to Groq,
+                                set <code>LLM_PROVIDER=groq</code>.
+                            </p>
+                            <p>
+                                For code generation with Groq’s GPT-OSS 20B or
+                                120B, ChromaScribe sets a default output allowance
+                                of 16,384 tokens. To change it, set
+                                <code>LLM_MAX_TOKENS</code> to a positive whole
+                                number within your model’s limit in
+                                <code>.env</code>, then restart the app.
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>Using local Ollama instead?</summary>
+                        <div class="detail-body">
+                            <p>
+                                Keep the template’s settings below. No API key
+                                is needed for the downloaded local model.
+                            </p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-label"
+                                        >.env for local Ollama</span
+                                    ><button class="copy" type="button">
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>LLM_BASE_URL=http://localhost:11434/v1
+LLM_MODEL=qwen3:latest
+LLM_API_KEY=</code></pre>
+                            </div>
+                        </div>
+                    </details>
+                    <div class="notice">
+                        <strong>Keep your key private</strong>
+                        <p>
+                            Save it only in your local <code>.env</code>, which
+                            Git ignores. Leave it out of screenshots, messages,
+                            and commits. If a key has been shared, revoke it
+                            with your provider and create a replacement.
+                        </p>
+                    </div>
+                    <p class="helper">
+                        Use the base URL without <code>/models</code> or
+                        <code>/chat/completions</code> at the end. Leave the
+                        other settings unchanged. On a Mac, press Cmd+Shift+. in
+                        Finder to show hidden files, or run
+                        <code>open -e .env</code>.
+                    </p>
+                </section>
+
+                <section
+                    class="step"
+                    id="verify"
+                    aria-labelledby="verify-title"
+                >
+                    <div class="step-heading">
+                        <span class="step-number" aria-hidden="true">3</span>
+                        <h2 id="verify-title">
+                            Start the app and try a small project
+                        </h2>
+                    </div>
+                    <p>
+                        If the app is running, stop it with
+                        <strong>Ctrl+C</strong>. With your Python environment
+                        active, start it again from this repository’s folder
+                        so it reads the saved settings:
+                    </p>
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span class="code-label"
+                                >From your ChromaScribe folder</span
+                            ><button class="copy" type="button">Copy</button>
+                        </div>
+                        <pre><code>python app.py</code></pre>
+                    </div>
+                    <details data-only="win">
+                        <summary>
+                            PowerShell won’t activate the Python environment?
+                        </summary>
+                        <div class="detail-body">
+                            <p>
+                                You can run the environment’s Python directly,
+                                without changing PowerShell’s execution policy:
+                            </p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-label"
+                                        >Windows PowerShell</span
+                                    ><button class="copy" type="button">
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>.\.venv\Scripts\python.exe app.py</code></pre>
+                            </div>
+                        </div>
+                    </details>
+                    <ol class="checklist">
+                        <li>Open ChromaScribe and create a new project.</li>
+                        <li>
+                            Upload a short fictional transcript and a few
+                            interview questions.
+                        </li>
+                        <li>
+                            Run AI processing, then review the Q&amp;A tags,
+                            codes, and linked excerpts.
+                        </li>
+                    </ol>
+                    <p class="helper">
+                        A demo already has results, so opening it doesn’t test
+                        your API key. Watch the terminal for connection errors.
+                        Manual editing and saved projects remain available even
+                        if AI processing is unavailable.
+                    </p>
+                    <a class="open-app" href="http://127.0.0.1:5001"
+                        >Open ChromaScribe</a
+                    >
+                    <p class="helper" style="margin-top: 18px">
+                        This edition uses one local workspace, saved in
+                        <code>.private/runtime</code> by default. It has no
+                        sign-in or automatic device sync. Keep it at
+                        <code>127.0.0.1</code>, rather than exposing it on a
+                        public URL.
+                    </p>
+                </section>
+
+                <section
+                    class="support"
+                    id="trouble"
+                    aria-labelledby="trouble-title"
+                >
+                    <h2 id="trouble-title">Something isn’t working?</h2>
+                    <p class="helper">
+                        Open the message that matches what you see. Keep keys
+                        and participant details out of anything you share for
+                        help.
+                    </p>
+                    <details>
+                        <summary>Connection refused</summary>
+                        <div class="detail-body">
+                            <p>
+                                Keep <code>python app.py</code> running. For
+                                local AI, start Ollama too. For hosted AI, check
+                                the provider’s API address and your network
+                                access.
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>401 or 403: key or access problem</summary>
+                        <div class="detail-body">
+                            <p>
+                                Check that the key belongs to the provider in
+                                <code>LLM_BASE_URL</code> and that your account
+                                can use the model. Save <code>.env</code> and
+                                restart the app. If the settings still look
+                                wrong, check terminal overrides below.
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>404: model not found</summary>
+                        <div class="detail-body">
+                            <p>
+                                Check the exact model ID and base URL. For
+                                Ollama, run <code>ollama list</code> and
+                                download the model if it is missing. A 404 from
+                                the optional <code>/models</code> check may
+                                simply mean that endpoint is unsupported.
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>
+                            429 or 503: usage limit or service unavailable
+                        </summary>
+                        <div class="detail-body">
+                            <p>
+                                For 429, check your provider’s usage and billing
+                                page. A temporary rate limit may clear after a
+                                wait; exhausted quota may need an account
+                                change. For 503, check the provider’s status
+                                page and try again later.
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>Groq could not finish a valid code response</summary>
+                        <div class="detail-body">
+                            <p>
+                                Groq rejected the generated JSON. Try again;
+                                if it keeps happening, increase
+                                <code>LLM_MAX_TOKENS</code> within your model’s
+                                limit or use a smaller transcript. Restart the
+                                app after changing <code>.env</code>.
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>
+                            No codes generated, or output could not be read
+                        </summary>
+                        <div class="detail-body">
+                            <p>
+                                Q&amp;A tagging and code generation use separate
+                                requests. Tagging can fall back to local
+                                matching when an AI request fails, so Q&amp;A
+                                tags alone do not confirm that the provider
+                                returned usable codes.
+                            </p>
+                            <p>
+                                “Could not be read as codes” means the reply
+                                did not contain usable code data. For Groq,
+                                check the <a href="#groq-settings">model settings above</a>
+                                and restart the app after updating it. Try a
+                                short fictional sample and check the
+                                code-generation error.
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>The AI reply was cut off</summary>
+                        <div class="detail-body">
+                            <p>
+                                The reply reached its output-token limit.
+                                You can override the code-generation output
+                                allowance with <code>LLM_MAX_TOKENS</code> in
+                                <code>.env</code>, using a larger positive integer
+                                within your model’s limit, or use a smaller
+                                transcript. Restart the app after changing the
+                                setting. A larger allowance may use more tokens.
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>A sign-in page appears</summary>
+                        <div class="detail-body">
+                            <p>
+                                You may be running another edition or checkout.
+                                Start this repository’s <code>app.py</code> and
+                                check whether another server is using port 5001.
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>
+                            My saved settings aren’t taking effect
+                        </summary>
+                        <div class="detail-body">
+                            <p>
+                                First, save <code>.env</code> and restart
+                                ChromaScribe from the same project folder. Use
+                                one active value for each setting.
+                            </p>
+                            <p>
+                                Variables already set in your terminal take
+                                priority over <code>.env</code>. This check
+                                prints their names, without showing their
+                                values:
+                            </p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-label"
+                                        >Python environment active</span
+                                    ><button class="copy" type="button">
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>python -c "
+import os
+
+setting_names = ('LLM_BASE_URL', 'LLM_MODEL', 'LLM_API_KEY', 'LLM_PROVIDER')
+for setting_name in setting_names:
+    if setting_name in os.environ:
+        print(setting_name + ' is set in this terminal')
+"</code></pre>
+                            </div>
+                            <p>
+                                To use <code>.env</code> instead, clear those
+                                overrides in this terminal, then restart the
+                                app:
+                            </p>
+                            <div class="code-block" data-only="mac">
+                                <div class="code-header">
+                                    <span class="code-label"
+                                        >macOS / Linux terminal</span
+                                    ><button class="copy" type="button">
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>unset LLM_BASE_URL LLM_MODEL LLM_API_KEY LLM_PROVIDER</code></pre>
+                            </div>
+                            <div class="code-block" data-only="win">
+                                <div class="code-header">
+                                    <span class="code-label"
+                                        >Windows PowerShell</span
+                                    ><button class="copy" type="button">
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>Remove-Item Env:LLM_BASE_URL, Env:LLM_MODEL, Env:LLM_API_KEY, Env:LLM_PROVIDER -ErrorAction SilentlyContinue</code></pre>
+                            </div>
+                            <p class="helper">
+                                If overrides return in a new terminal, update
+                                where you originally set them, such as your
+                                shell profile or operating system settings.
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>
+                            Optional: list the models your endpoint returns
+                        </summary>
+                        <div class="detail-body">
+                            <p>
+                                Run this in another terminal, from the project
+                                folder with the same Python environment active.
+                                It reads your configuration without printing the
+                                key.
+                            </p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-label"
+                                        >Terminal or PowerShell</span
+                                    ><button class="copy" type="button">
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>python -c "
+from dotenv import load_dotenv
+from openai import OpenAI
+from processing_scripts.llm_config import resolve_llm_config
+
+load_dotenv('.env')
+provider, base_url, model, api_key = resolve_llm_config()
+client = OpenAI(base_url=base_url, api_key=api_key)
+for available_model in client.models.list():
+    print(available_model.id)
+"</code></pre>
+                            </div>
+                            <p class="helper">
+                                Some providers don’t offer a model-list
+                                endpoint; others list models without checking a
+                                key. Use a new sample project to test the
+                                complete workflow.
+                            </p>
+                        </div>
+                    </details>
+                </section>
+                <footer>
+                    <p>
+                        Need the full installation steps?
+                        <a
+                            href="https://github.com/hidykong/ChromaScribe#readme"
+                            target="_blank"
+                            rel="noopener"
+                            >Read the ChromaScribe README</a
+                        >. For help, share the provider, model ID, and a
+                        redacted error message.
+                    </p>
+                </footer>
+            </main>
+        </div>
+        <div
+            id="copy-status"
+            role="status"
+            aria-live="polite"
+            style="
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                overflow: hidden;
+                clip-path: inset(50%);
+            "
+        ></div>
+        <script>
+            const osButtons = document.querySelectorAll("[data-set-os]");
+
+            function showOperatingSystem(system) {
+                document.querySelectorAll("[data-only]").forEach((section) => {
+                    section.hidden = section.dataset.only !== system;
+                });
+                osButtons.forEach((button) => {
+                    button.setAttribute(
+                        "aria-pressed",
+                        String(button.dataset.setOs === system),
+                    );
+                });
+                try {
+                    localStorage.setItem("chromascribe-os", system);
+                } catch (error) {
+                    /* Optional preference. */
+                }
+            }
+
+            let savedSystem;
+            try {
+                savedSystem = localStorage.getItem("chromascribe-os");
+            } catch (error) {
+                /* Use platform default. */
+            }
+            const defaultSystem = /win/i.test(navigator.platform || "")
+                ? "win"
+                : "mac";
+            showOperatingSystem(
+                ["win", "mac"].includes(savedSystem)
+                    ? savedSystem
+                    : defaultSystem,
+            );
+            osButtons.forEach((button) => {
+                button.addEventListener("click", () =>
+                    showOperatingSystem(button.dataset.setOs),
+                );
+            });
+
+            function selectCode(block) {
+                const range = document.createRange();
+                range.selectNodeContents(block);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+
+            document.querySelectorAll(".copy").forEach((button) => {
+                const block = button
+                    .closest(".code-block")
+                    .querySelector("pre");
+                const label = button
+                    .closest(".code-block")
+                    .querySelector(".code-label").textContent;
+                button.setAttribute("aria-label", `Copy ${label}`);
+                button.addEventListener("click", async () => {
+                    let message = "Copied";
+                    try {
+                        await navigator.clipboard.writeText(block.textContent);
+                    } catch (error) {
+                        selectCode(block);
+                        message = /mac/i.test(navigator.platform || "")
+                            ? "Press Cmd+C"
+                            : "Press Ctrl+C";
+                    }
+                    button.textContent = message;
+                    document.getElementById("copy-status").textContent =
+                        message;
+                    setTimeout(() => {
+                        button.textContent = "Copy";
+                    }, 2000);
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/d3@4.13.0/build/d3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="../../static/styles.css?v=20260522a">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&family=Nunito:wght@600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../../static/Pages/settings-page/demographics/demographics.css">
+    <title>Demographics Settings</title>
+</head>
+
+<body class="container-fluid" style="padding-left: 0; padding-right: 0; margin-left: 0; background: #E5E5E5; 
+    font-family: Nunito; font-size: 16px;">
+    <div id="demographics-page" style="display: flex; height: 100%; width: 100%;">
+        <div id="editing" class="sections" style="position: absolute; z-index: 2; left: 0px; right: 0px; 
+        top: 0px; bottom: 0px; display: flex; flex-direction: row;">
+            <div id="settingsTabs" style="background: #ffffff; box-shadow: 0px 4px 4px 4px rgba(0, 48, 83, 0.25); 
+            height: 100%; width: 16%; overflow: auto;"></div>
+            <div class="container" id="attributes-window" style="right: 22px; height: 100%; width: 84%; display: flex; flex-direction: column; 
+            align-items: center; overflow: auto;">
+                <div class="attr-wrapper">
+                    <div class="header1">
+                        Choose your Demographics
+                    </div>
+                    <div class="header2">
+                        Please select the demographic fields you would like to include for your participants from the
+                        provided list.
+                    </div>
+                    <div class="choose-button-frame">
+                        <div class="choose-button-frame-inner">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/static/Pages/projectProgressSync.js?v=20260823a" defer></script>
+    <script src="https://unpkg.com/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.js"></script>
+    <script type="module">
+        import { showSettings } from '../../static/Pages/settings-page/menupanel.js?v=20260901a';
+        import { chooseDemographicsAttributes } from '../../static/Pages/settings-page/demographics/chooseDemographicsAttributes.js';
+        console.log("Demographics settings page.")
+        showSettings();
+        showSettings();
+        d3.select("#demographics-tab").select("div").style("background", "#3A61DD1F").select("img")
+            .attr("src", "/static/images/Enable_Demographics.png");
+
+        window.onload = function() {
+            const demographicsObject = JSON.parse('{{ demographicsObject|tojson|safe }}');
+            console.log('Retrieved demo_info:', demographicsObject);
+            chooseDemographicsAttributes(demographicsObject);
+        }
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+</body>
+
+</html>

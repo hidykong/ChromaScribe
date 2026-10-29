@@ -1,0 +1,143 @@
+# Local credentials and private study accounts
+.env
+.env.*
+!.env.template
+*firebase-adminsdk*.json
+*service-account*.json
+*service_account*.json
+*[sS]ervice[Aa]ccount*.json
+*firebase-credentials*.json
+*firebase_credentials*.json
+*firebaseCredentials*.json
+*client_secret*.json
+*client-secret*.json
+*clientSecret*.json
+credentials
+credentials.json
+credentials.yaml
+credentials.yml
+credentials.ini
+credentials.toml
+.aws/
+.ssh/
+.azure/
+.gcloud/
+.config/gcloud/
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.jks
+*.keystore
+study_credentials/
+
+# Installed dependencies and Python environments
+node_modules/
+venv/
+.venv*/
+__pycache__/
+*.py[cod]
+
+# Local editor settings, operating system files, and backup files
+.DS_Store
+._*
+Thumbs.db
+.idea/
+.vscode/
+.history/
+*.swp
+*.swo
+*.bak
+*.orig
+*~
+
+# Internal notes stay local; these four guides are public documentation
+*.md
+!/README.md
+!/README-team-setup.md
+!/README-storage-and-analytics.md
+!/README-frontend.md
+notes/
+internal notes/
+.private/
+
+# Internal study tooling and unused legacy scripts, retained locally
+/scripts/provision_study_accounts.py
+/scripts/delete_legacy_usage_logs.py
+/processing_scripts/sample.py
+/processing_scripts/tag_answers.py
+/static/sender.php
+
+# Unused legacy data files, retained locally
+/static/code_groups.json
+/static/stemDict.json
+
+# Private runtime inputs, generated analyses, and original recordings
+/projects/
+/intermediate_files/
+/static/User_projects/
+/static/Uploaded_files/
+/static/Processed_files/
+/static/Demo_project/
+/static/audio_storage/
+/static/user-imported-files/
+
+# Legacy Q&A outputs can contain interview text
+/possibleAnswerScript.json
+/answersTag.json
+/processing_scripts/possibleQuestionScript.txt
+/processing_scripts/questionsTag.json
+
+# Internal test suite and its runner stay local
+/tests/
+/scripts/run_tests.py
+
+# Hosted-edition deployment and legacy migration tools stay local
+/Procfile
+/deploy.sh
+/up.sh
+/tmux_boot.sh
+/scripts/migrate_private_storage.py
+
+# Generated test reports and caches
+.playwright-cli/
+playwright-report/
+test-results/
+playwright/.cache/
+.pytest_cache/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+/coverage.xml
+htmlcov/
+coverage/
+.nyc_output/
+
+# Other development caches and generated build output
+.cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+/build/
+/dist/
+*.egg-info/
+
+# Temporary processing files and local process logs
+.transcript-import-*
+*.tmp
+*.temp
+*.log
+*.pid
+*.pid.lock
+/logs/
+
+# Internal documents stored beside application images
+/static/images/*.pdf
+/static/images/*.docx
+
+# Obsolete internal setup screenshots
+/static/images/chromaScibeSetup1.png
+/static/images/chromaScibeSetup2.png

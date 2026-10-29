@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/d3@4.13.0/build/d3.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="../../static/styles.css?v=20260522a">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;400;600&family=Nunito:wght@600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../../static/Pages/settings-page/demographics/demographics.css">
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@36.2.0/dist/ag-grid-community.min.js"></script>
+    <title>Demographics Settings</title>
+</head>
+
+<body class="container-fluid" style="padding-left: 0; padding-right: 0; margin-left: 0; background: #E5E5E5; 
+    font-family: Nunito; font-size: 16px;">
+    <div id="demographics-page" style="display: flex; height: 100%; width: 100%;">
+        <div id="editing" class="sections" style="position: absolute; z-index: 2; left: 0px; right: 0px; 
+        top: 0px; bottom: 0px; display: flex; flex-direction: row;">
+            <div id="settingsTabs" style="background: #ffffff; box-shadow: 0px 4px 4px 4px rgba(0, 48, 83, 0.25); 
+            height: 100%; width: 16%; overflow: auto;"></div>
+            <div class="container" id="attributes-window" style="right: 22px; height: 100%; width: 84%; display: flex; flex-direction: column; 
+            align-items: center; overflow: auto;">
+                <div class="attr-wrapper">
+                    <div class="row justify-content-end" id="demographics-grid-header">
+                        <div class="table-header col-8">
+                            Demographics Manager
+                        </div>
+                        <div class="col-4 d-flex justify-content-end align-items-center gap-2">  <!-- Flexbox for button container -->
+                            <div class="button col-6" id="add-attribute-button" style="background-color: #3366cc; border: none;" >
+                                <div id="add-attribute-button" style="display: inline-flex; justify-content: center; align-items: center; gap: 10px; height: 30px; width: 150px;">
+                                    <svg width="15" height="16" viewBox="0 0 15 16" fill="none">
+                                        <path d="M1 8H14" stroke="white" stroke-width="2"></path>
+                                        <path d="M8 1V14" stroke="white" stroke-width="2"></path>
+                                    </svg>
+                                    <span style="font-size: 14px; color: white; font-weight: bold;">Add Attribute</span>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div id="demographics-grid" class="ag-theme-quartz" style="width: 100%; height:90%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="/static/Pages/projectProgressSync.js?v=20260823a" defer></script>
+    <script type="module">
+        import { showSettings } from '../../static/Pages/settings-page/menupanel.js?v=20260901a';
+        import { demographicsManager } from '../../static/Pages/settings-page/demographics/demographicsManager.js?v=20260601b';
+        showSettings();
+        window.APP_MODE = '{{ mode }}';
+        window.CURRENT_PROJECT_ID = '{{ session.get("current_project_id", "") }}';
+        window.USER_WORKSPACE_KEY = '{{ session.get("user_workspace_key", "") }}';
+        try {
+            if (window.USER_WORKSPACE_KEY) localStorage.setItem("currentWorkspaceKey", window.USER_WORKSPACE_KEY);
+            if (window.CURRENT_PROJECT_ID) localStorage.setItem("currentProjectId", window.CURRENT_PROJECT_ID);
+        } catch (error) {
+            console.warn("Could not sync project context:", error);
+        }
+
+        window.onload = async function () {
+            const demographicsObjectFromFlask = JSON.parse('{{ demographicsObject|tojson|safe }}');
+            console.log('Demographics Manager Page: Retrieved demographicsObjectFromFlask:', demographicsObjectFromFlask);
+            //demographicsManager(demographicsObjectFromFlask);
+            
+            // Specifically check gender values here
+            const genderOption = (demographicsObjectFromFlask.options || []).find(o => o.field === 'gender');
+            if (genderOption) {
+                console.log("DEMO MGR HTML: Gender values BEFORE calling demographicsManager:", genderOption.values);
+            } else {
+                console.log("DEMO MGR HTML: 'gender' field not found in options.");
+            }
+
+            await demographicsManager(demographicsObjectFromFlask);
+        }
+        
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous"></script>
+</body>
+
+</html>
