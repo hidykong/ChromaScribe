@@ -35,6 +35,7 @@ import {
 } from "./excerptConfidenceSettings.js?v=20260901c";
 import { demoingObject, themesObject, selectedThemeBoxObject, tempThemesObject,
 	firstShowOnboradingObject, multiSelectedWordsObject, themes } from "../../../chromascribe-main.js";
+import { getCurrentModelName, loadCurrentModelName } from "./modelName.js";
 
 const THEMES_EDIT_ONBOARDING_ENDPOINT = "/api/themes_edit_onboarding";
 function getCurrentProjectId() {
@@ -1100,7 +1101,7 @@ function getThemeNamesForSimilarSearch(themeObject) {
 					showSimilarExcerptToast({
 						state: "loading",
 						title: data.status === "cancelling" ? "Stopping similar excerpt search" : "Finding similar excerpts",
-						message: data.message || `Qwen3 is scanning transcripts for ${formatThemeLabel(themeName)}.`,
+						message: data.message || `${getCurrentModelName()} is scanning transcripts for ${formatThemeLabel(themeName)}.`,
 						detail: buildSimilarExcerptSourceDetail(data, `${progressPercent ?? 0}% - ${phase} - ${elapsedSeconds}s elapsed`),
 						progressPercent: progressPercent ?? 0,
 						showStop: data.status !== "cancelling",
@@ -1130,7 +1131,7 @@ function getThemeNamesForSimilarSearch(themeObject) {
 					showSimilarExcerptToast({
 						state: "empty",
 						title: "No new excerpts added",
-						message: "Qwen3 found similar text, but it was already listed for this code.",
+						message: "${getCurrentModelName()} found similar text, but it was already listed for this code.",
 						detail: buildSimilarExcerptSourceDetail(data, "The matching excerpt list has been refreshed."),
 						autoDismissMs: 8000
 					});
@@ -1218,7 +1219,7 @@ async function startSimilarExcerptSearch(themeObject, buttonNode) {
 		showSimilarExcerptToast({
 			state: "loading",
 			title: "Starting similar excerpt search",
-			message: `Preparing Qwen3 to scan transcripts for ${formatThemeLabel(selectedTheme)}.`,
+			message: `Preparing ${getCurrentModelName()} to scan transcripts for ${formatThemeLabel(selectedTheme)}.`,
 			detail: "0% - Starting",
 			progressPercent: 0
 		});
@@ -1261,7 +1262,7 @@ async function startSimilarExcerptSearch(themeObject, buttonNode) {
 				showSimilarExcerptToast({
 					state: "loading",
 					title: "Similar excerpt search started",
-					message: `Qwen3 is scanning transcripts for ${formatThemeLabel(selectedTheme)}.`,
+					message: `${getCurrentModelName()} is scanning transcripts for ${formatThemeLabel(selectedTheme)}.`,
 					detail: buildSimilarExcerptSourceDetail(data, "0% - Scanning transcripts"),
 					progressPercent: 0,
 					showStop: true,
@@ -1286,6 +1287,7 @@ async function startSimilarExcerptSearch(themeObject, buttonNode) {
 }
 
 export async function editThemes(themeObject) {
+	void loadCurrentModelName();
 	setMatchingExcerptLoadState("loading");
 	const projectId = getCurrentProjectId();
 	const selectionPending =
@@ -1771,7 +1773,7 @@ var selectedThemeName = null;
 		const findSimilarButton = topActions.append("button")
 			.attr("type", "button")
 			.attr("aria-label", "Find similar excerpts for the selected code")
-			.attr("title", "Ask Qwen3 to scan transcripts for more excerpts similar to the selected code")
+			.attr("title", "Ask ${getCurrentModelName()} to scan transcripts for more excerpts similar to the selected code")
 			.style("height", "clamp(32px, 3vw, 40px)")
 			.style("border-radius", "10px")
 			.style("background", "#3A61DD")
@@ -1809,6 +1811,9 @@ var selectedThemeName = null;
 		findSimilarButton.append("span")
 			.attr("class", "similar-excerpt-button-label")
 			.text("Find Similar Excerpts");
+		loadCurrentModelName().then(name => {
+		findSimilarButton.attr("title", `Ask ${name} to scan transcripts for more excerpts similar to the selected code`);
+	});
 
 		// ADD archive button:
 		var archiveButton = topActions.append("button")

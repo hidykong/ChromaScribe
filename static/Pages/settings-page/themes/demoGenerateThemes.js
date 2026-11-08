@@ -16,6 +16,7 @@ import {
     navigateToVisualizationWithOverlay,
     showVisualizationLoadingOverlay
 } from "./visualizationLoadingOverlay.js?v=20260901a";
+import { loadCurrentModelName } from "./modelName.js";
 
 let masterCodeGroups = [];
 let masterCodeGroupMeta = {};
@@ -2368,7 +2369,7 @@ function appendEditCodesAvailabilityHelp(container, button) {
 }
 
 
-async function generateMoreCodesWithQwen(themes, buttonNode) {
+async function generateMoreCodesWithAI(themes, buttonNode) {
     const button = d3.select(buttonNode);
     const originalLabel = button.text();
     button
@@ -2376,7 +2377,8 @@ async function generateMoreCodesWithQwen(themes, buttonNode) {
         .style("opacity", "0.62")
         .style("cursor", "wait")
         .text("Generating...");
-    showCodeManagerStatus("Qwen3 is generating more code suggestions.");
+    const modelName = await loadCurrentModelName();
+    showCodeManagerStatus(`${modelName} is generating more code suggestions.`);
 
     try {
         const response = await fetch("/api/generate_more_codes", {
@@ -2404,7 +2406,7 @@ async function generateMoreCodesWithQwen(themes, buttonNode) {
         showCodeManagerStatus(
             addedCount > 0
                 ? `Added ${addedCount} AI-suggested code${addedCount === 1 ? "" : "s"}.`
-                : "Qwen3 did not find distinct new codes this time.",
+                : `${modelName} did not find distinct new codes this time.`,
             "info"
         );
         window.dispatchEvent(new CustomEvent("themes:code-suggestions-updated", {
@@ -2589,7 +2591,7 @@ export async function startDemoThemeEditing(themes) {
         .style("cursor", "pointer")
         .text("AI Generate More Codes")
         .on("click", function () {
-            void generateMoreCodesWithQwen(themes, this);
+            void generateMoreCodesWithAI(themes, this);
         });
 
     actionButtons.append("button")
