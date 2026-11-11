@@ -59,6 +59,7 @@ const NOTE_RAIL_MIN_WIDTH = 132;
 const NOTE_RAIL_MAX_WIDTH = 190;
 const MANUAL_CODE_SELECTION_SOURCE = "manual_codes";
 const APPLIED_CODE_SELECTION_STAGE = "applied_codes";
+const AI_SOURCE_ICON_PATH = "m12 3 2.7 6.3L21 12l-6.3 2.7L12 21l-2.7-6.3L3 12l6.3-2.7L12 3M20 2v4m-2-2h4";
 let noteRailResizeHandlerBound = false;
 let currentThemePayloadIsAppliedSelection = false;
 let currentSelectedThemePayload = null;
@@ -81,7 +82,8 @@ function updateUndoButton(state) {
     if (!button) return;
     button.disabled = !state.canUndo;
     button.title = state.label ? `Undo: ${state.label}` : "No tag or code changes to undo yet";
-    button.textContent = state.undoing ? "Undoing…" : "↶ Undo";
+    const label = document.getElementById("transcriptUndoLabel");
+    if (label) label.textContent = state.undoing ? "Undoing…" : "Undo";
     const status = document.getElementById("transcriptUndoStatus");
     if (status && state.pending > 0) status.textContent = "";
 }
@@ -1517,12 +1519,11 @@ function appendThemeSourceBadge(parent, sourceInfo) {
         .attr("title", sourceInfo.title)
         .attr("aria-label", sourceInfo.title);
     const humanPath = "M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8";
-    const aiPath = "m12 3 2.7 6.3L21 12l-6.3 2.7L12 21l-2.7-6.3L3 12l6.3-2.7L12 3M20 2v4m-2-2h4";
     if (sourceInfo.className === "is-human" || sourceInfo.className === "is-human-ai") {
         appendCodeSourceIcon(badge, humanPath);
     }
     if (sourceInfo.className === "is-ai" || sourceInfo.className === "is-human-ai") {
-        appendCodeSourceIcon(badge, aiPath);
+        appendCodeSourceIcon(badge, AI_SOURCE_ICON_PATH);
     }
     if (sourceInfo.className === "is-neutral") badge.text(sourceInfo.label);
     return badge;
@@ -1540,30 +1541,6 @@ function appendCodeSourceIcon(badge, path) {
         .attr("stroke-linecap", "round")
         .attr("stroke-linejoin", "round")
         .append("path").attr("d", path);
-}
-
-function cueHasAiTaggedCode(cue, themePayload) {
-    const themes = Array.isArray(themePayload && themePayload.themes) ? themePayload.themes : [];
-    return themes.some(themeData =>
-        selectedThemeWordsForCue(themeData, cue).some(isAiGeneratedCodeEntry)
-    );
-}
-
-function appendAiTaggedBadge(parent) {
-    return parent.append("span")
-        .attr("class", "ai-tagged-badge")
-        .style("display", "inline-flex")
-        .style("align-items", "center")
-        .style("margin-left", "8px")
-        .style("padding", "2px 8px")
-        .style("border-radius", "999px")
-        .style("background", "#eef2ff")
-        .style("color", "#2643b6")
-        .style("font-size", "0.72em")
-        .style("font-weight", "700")
-        .style("line-height", "1.4")
-        .style("white-space", "nowrap")
-        .text("[AI-tagged]");
 }
 
 async function applySpeakerRole(rawSpeaker, targetRole) {
@@ -1636,24 +1613,34 @@ async function removeAiQATag(cue, blockIndex, participant) {
 }
 
 function appendQATagBadge(container, rawTag, blockIndex = currentJ, participant = currentParticipant) {
+    const aiTag = canRemoveAiQATag(rawTag) ? normalizeQATag(rawTag.tag) : "";
+    const primaryTag = normalizeQATag(rawTag?.manualTag ?? rawTag?.tag);
+    // "Keep both" stores the accepted AI answer as an additional tag.
+    const additionalAiTags = Array.isArray(rawTag?.additionalTags) ? getCueQATags(rawTag.additionalTags) : [];
     getDisplayedQATags(rawTag).forEach(tag => {
         const tagType = tag.charAt(0);
         const tagNumber = tag.slice(1);
         const tagLabel = tagType === "Q" ? "Question" : "Answer";
         const tagClass = tagType === "Q" ? "qa-tag-question" : "qa-tag-answer";
+        const isAiTag = tag === aiTag || (tag !== primaryTag && additionalAiTags.includes(tag));
+        const description = `${tagLabel} ${tagNumber}${isAiTag ? ", AI-tagged" : ""}`;
 
-        container.append("span")
+        const badge = container.append("span")
             .attr("class", `tag-badge qa-tag-badge ${tagClass}`)
-            .attr("title", `${tagLabel} ${tagNumber}`)
-            .attr("aria-label", `${tagLabel} ${tagNumber}`)
-            .text(tag);
+            .attr("title", description)
+            .attr("aria-label", description);
+        if (isAiTag) {
+            badge.attr("role", "img");
+            appendCodeSourceIcon(badge, AI_SOURCE_ICON_PATH);
+        }
+        badge.append("span").text(tag);
     });
-    if (!canRemoveAiQATag(rawTag)) return;
+    if (!aiTag) return;
     container.append("button")
         .attr("type", "button")
         .attr("class", "tag-badge qa-remove-ai-tag")
         .attr("title", "Remove this sentence's AI Q&A tag. You can undo this change.")
-        .attr("aria-label", `Remove AI tag ${normalizeQATag(rawTag.tag)} from this sentence`)
+        .attr("aria-label", `Remove AI tag ${aiTag} from this sentence`)
         .style("background", "#fff")
         .style("border-color", "#d1d5db")
         .style("color", "#4b5563")
@@ -2011,9 +1998,6 @@ function renderSpeechBlock(editor, cue, j, theme, participant) {
         .style("font-size", "0.9em")
         .style("color", "#666")
         .text(cue.timestamp || "No timestamp");
-    if (cueHasAiTaggedCode(cue, theme)) {
-        appendAiTaggedBadge(info);
-    }
 
     const script = scriptSide.append("div")
         .attr("id", `script_${j}`).attr("class", "script-block")
@@ -2314,7 +2298,10 @@ function populateTagMenu(container, currentThemes, interview) {
             .attr("class", "tag-option-name")
             .text(getCodeLabel(code));
         if (isAiGeneratedCode(code)) {
-            appendAiTaggedBadge(label);
+            appendThemeSourceBadge(label, {
+                className: "is-ai",
+                title: `${getCodeLabel(code)} was suggested by AI.`
+            });
         }
 
         const meta = option.append("span")
